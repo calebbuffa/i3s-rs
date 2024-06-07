@@ -3,12 +3,10 @@ mod stream;
 mod i3s;
 
 use common::{Node, NodePage, SceneLayerInfo};
-use stream::{ZipFileReader};
-// use flate2::read::GzDecoder;
-// use serde_json::Value;
+use stream::ZipFileReader;
 use std::fs::File;
-// use std::io::Read;
-// use zip::read::ZipFile;
+
+const SLPK_PATH: &str = r"path";
 
 fn find_node_page_paths(zip_archive: &mut zip::ZipArchive<File>) -> Vec<String> {
     zip_archive
@@ -19,8 +17,7 @@ fn find_node_page_paths(zip_archive: &mut zip::ZipArchive<File>) -> Vec<String> 
 }
 
 fn main() {
-    let slpk_path = r"C:\Users\cal11713\data\Catalina\DJI\Mesh\slpk\mesh_projected2.slpk";
-    let file = File::open(slpk_path).unwrap();
+    let file = File::open(SLPK_PATH).unwrap();
     let mut zip_archive = zip::ZipArchive::new(file).unwrap();
     {
         let mut scene_layer_info_zip_file = zip_archive.by_name("3dSceneLayer.json.gz").unwrap();
@@ -35,8 +32,7 @@ fn main() {
             let node_page = NodePage::from_zip(&mut file).unwrap();
             nodes.extend(node_page.nodes);
         }
-        // get root node
-        let _ = nodes.iter().find(|node| node.is_root()).unwrap();
-        // println!("{:?}", root_node);
+        let root_node = nodes.iter().find(|node| node.is_root()).unwrap();
+        println!("{:?}", root_node);
     }
 }
