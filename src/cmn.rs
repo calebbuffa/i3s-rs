@@ -42,8 +42,41 @@ pub struct SceneLayerInfo {
 }
 
 impl io::ZipFileReader for SceneLayerInfo {}
+impl Default for SceneLayerInfo {
+    fn default() -> Self {
+        Self {
+            id: -1,
+            layer_type: String::new(),
+            version: String::new(),
+            capabilities: vec![],
+            store: Store::default(),
+            geometry_definitions: vec![],
+            name: None,
+            full_extent: None,
+            spatial_reference: None,
+            alias: None,
+            service_update_time_stamp: None,
+            height_model_info: None,
+            drawing_info: None,
+            node_pages: None,
+            material_definitions: None,
+            texture_set_definitions: None,
+            description: None,
+            copyright_text: None,
+            href: None,
+            cached_drawing_info: None,
+            disable_pop_up: None,
+            attribute_storage_info: None,
+            statistics_info: None,
+            z_factor: None,
+            pop_up_info: None,
+            fields: None,
+            elevation_info: None,
+        }
+    }
+}
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ElevationInfo {
     pub mode: Option<String>,
@@ -51,7 +84,7 @@ pub struct ElevationInfo {
     pub unit: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Field {
     pub name: String,
@@ -61,7 +94,7 @@ pub struct Field {
     pub domain: Option<Domain>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Domain {
     #[serde(rename = "type")]
@@ -75,14 +108,14 @@ pub struct Domain {
     pub split_policy: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DomainCodedValue {
     pub name: String,
     pub code: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PopUpInfo {
     pub title: Option<String>,
@@ -93,7 +126,7 @@ pub struct PopUpInfo {
     pub expression_infos: Option<Vec<Option<serde_json::Value>>>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FieldInfo {
     pub field_name: Option<String>,
@@ -102,7 +135,7 @@ pub struct FieldInfo {
     pub label: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PopupElement {
     pub text: Option<String>,
@@ -111,7 +144,7 @@ pub struct PopupElement {
     pub field_infos: Option<Vec<FieldInfo>>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatisticsInfo {
     pub key: String,
@@ -119,7 +152,7 @@ pub struct StatisticsInfo {
     pub href: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AttributeStorageInfo {
     pub key: String,
@@ -131,7 +164,7 @@ pub struct AttributeStorageInfo {
     pub object_ids: Option<Value>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HeaderValue {
     pub value_type: String,
@@ -152,19 +185,31 @@ pub struct Value {
     pub values_per_element: Option<f32>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+impl Default for Value {
+    fn default() -> Self {
+        Self {
+            value_type: String::new(),
+            encoding: None,
+            time_encoding: default_time_encoding(),
+            values_per_element: None,
+        }
+    }
+}
+
+#[derive(Default, Debug, Clone, Deserialize)]
 pub struct CachedDrawingInfo {
     pub color: bool,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DrawingInfo {
     pub renderer: Renderer,
     pub scale_symbols: Option<bool>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Renderer {
     #[serde(rename = "type")]
     pub renderer_type: Option<String>,
@@ -173,7 +218,7 @@ pub struct Renderer {
     pub symbol: Option<Symbol>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Symbol {
     #[serde(rename = "type")]
@@ -181,14 +226,15 @@ pub struct Symbol {
     pub symbol_layers: Option<Vec<SymbolLayer>>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SymbolLayer {
     #[serde(rename = "type")]
     pub symbol_layer_type: Option<String>,
     pub material: Option<Material>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 pub struct Material {
     pub color: Option<Vec<i32>>,
     pub transparency: Option<i32>,
@@ -206,7 +252,21 @@ pub struct FullExtent {
     pub spatial_reference: Option<SpatialReference>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+impl Default for FullExtent {
+    fn default() -> Self {
+        Self {
+            xmin: -1.0,
+            xmax: -1.0,
+            ymin: -1.0,
+            ymax: -1.0,
+            zmin: -1.0,
+            zmax: -1.0,
+            spatial_reference: None,
+        }
+    }
+}
+
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SpatialReference {
     pub latest_vcs_wkid: Option<i32>,
@@ -228,6 +288,15 @@ pub struct GeometryDefinition {
     pub topology: String,
 }
 
+impl Default for GeometryDefinition {
+    fn default() -> Self {
+        Self {
+            geometry_buffers: vec![],
+            topology: default_geometry_definition_topology(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GeometryPosition {
@@ -238,7 +307,7 @@ pub struct GeometryPosition {
 
 impl GeometryPosition {
     pub fn new() -> Self {
-        GeometryPosition {
+        Self {
             dtype: "Float32".to_string(),
             component: 3,
         }
@@ -247,7 +316,7 @@ impl GeometryPosition {
 
 impl Default for GeometryPosition {
     fn default() -> Self {
-        GeometryPosition::new()
+        Self::new()
     }
 }
 
@@ -261,7 +330,7 @@ pub struct GeometryNormal {
 
 impl GeometryNormal {
     pub fn new() -> Self {
-        GeometryNormal {
+        Self {
             dtype: "Float32".to_string(),
             component: 3,
         }
@@ -270,7 +339,7 @@ impl GeometryNormal {
 
 impl Default for GeometryNormal {
     fn default() -> Self {
-        GeometryNormal::new()
+        Self::new()
     }
 }
 
@@ -284,7 +353,7 @@ pub struct GeometryUV {
 
 impl GeometryUV {
     pub fn new() -> Self {
-        GeometryUV {
+        Self {
             dtype: "Float32".to_string(),
             component: 2,
         }
@@ -293,7 +362,7 @@ impl GeometryUV {
 
 impl Default for GeometryUV {
     fn default() -> Self {
-        GeometryUV::new()
+        Self::new()
     }
 }
 
@@ -307,7 +376,7 @@ pub struct GeometryColor {
 
 impl GeometryColor {
     pub fn new() -> Self {
-        GeometryColor {
+        Self {
             dtype: "Uint8".to_string(),
             component: 3,
         }
@@ -316,7 +385,7 @@ impl GeometryColor {
 
 impl Default for GeometryColor {
     fn default() -> Self {
-        GeometryColor::new()
+        Self::new()
     }
 }
 
@@ -331,7 +400,7 @@ pub struct GeometryFeatureID {
 
 impl GeometryFeatureID {
     pub fn new() -> Self {
-        GeometryFeatureID {
+        Self {
             dtype: "UInt32".to_string(),
             component: 1,
             binding: "per-feature".to_string(),
@@ -341,7 +410,7 @@ impl GeometryFeatureID {
 
 impl Default for GeometryFeatureID {
     fn default() -> Self {
-        GeometryFeatureID::new()
+        Self::new()
     }
 }
 
@@ -357,13 +426,13 @@ pub struct GeometryFaceRange {
 impl GeometryFaceRange {
     pub fn new(component: Option<i32>) -> Self {
         if let Some(component) = component {
-            return GeometryFaceRange {
+            return Self {
                 dtype: "Uint32".to_string(),
                 component: component,
                 binding: "per-feature".to_string(),
             };
         } else {
-            return GeometryFaceRange {
+            return Self {
                 dtype: "Uint32".to_string(),
                 component: -1,
                 binding: "per-feature".to_string(),
@@ -374,11 +443,11 @@ impl GeometryFaceRange {
 
 impl Default for GeometryFaceRange {
     fn default() -> Self {
-        GeometryFaceRange::new(None)
+        Self::new(None)
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GeometryBuffer {
     #[serde(default)]
@@ -408,16 +477,22 @@ pub struct CompressedAttributes {
     pub attributes: Option<Vec<String>>,
 }
 
-impl Default for CompressedAttributes {
-    fn default() -> Self {
-        CompressedAttributes {
+impl CompressedAttributes {
+    pub fn new() -> Self {
+        Self {
             encoding: default_compressed_attributes_encoding(),
             attributes: None,
         }
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
+impl Default for CompressedAttributes {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[derive(Default, Debug, Clone, Deserialize)]
 pub struct GeometryBufferMetadata {
     #[serde(rename = "type")]
     pub dtype: String,
@@ -426,7 +501,7 @@ pub struct GeometryBufferMetadata {
     pub encoding: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HeightModelInfo {
     pub height_model: Option<String>,
@@ -461,6 +536,22 @@ pub struct MaterialDefinitions {
     pub cull_face: String,
 }
 
+impl Default for MaterialDefinitions {
+    fn default() -> Self {
+        Self {
+            pbr_metallic_roughness: PbrMetallicRoughness::default(),
+            normal_texture: None,
+            occlusion_texture: None,
+            emissive_texture: None,
+            emissive_factor: None,
+            alpha_mode: None,
+            alpha_cutoff: default_alpha_cutoff(),
+            double_sided: false,
+            cull_face: default_cull_face(),
+        }
+    }
+}
+
 fn default_base_color_factor() -> [f32; 4] {
     [1.0, 1.0, 1.0, 1.0]
 }
@@ -480,7 +571,7 @@ pub struct PbrMetallicRoughness {
 
 impl Default for PbrMetallicRoughness {
     fn default() -> Self {
-        PbrMetallicRoughness {
+        Self {
             base_color_factor: default_base_color_factor(),
             metallic_factor: 1.0,
             roughness_factor: 1.0,
@@ -501,13 +592,38 @@ pub struct MaterialTexture {
     pub tex_coord: i32,
 }
 
+impl Default for MaterialTexture {
+    fn default() -> Self {
+        Self {
+            texture_set_definition_id: -1,
+            factor: default_texture_value(),
+            tex_coord: 0,
+        }
+    }
+}
+
+fn default_nodes_per_page() -> i32 {
+    64
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NodePageDefinition {
+    #[serde(default = "default_nodes_per_page")]
     pub nodes_per_page: i32,
     pub lod_selection_metric_type: String,
     #[serde(default)]
     pub root_index: i32, // default is 0
+}
+
+impl Default for NodePageDefinition {
+    fn default() -> Self {
+        Self {
+            nodes_per_page: default_nodes_per_page(),
+            lod_selection_metric_type: String::new(),
+            root_index: 0,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -516,7 +632,13 @@ pub struct ServiceUpdateTimeStamp {
     pub last_update: i64, // Unix epoch from 1 January 1970 in milliseconds
 }
 
-#[derive(Debug, Clone, Deserialize)]
+impl Default for ServiceUpdateTimeStamp {
+    fn default() -> Self {
+        Self { last_update: -1 }
+    }
+}
+
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Store {
     pub profile: String,
@@ -553,14 +675,14 @@ pub struct Store {
     pub default_material_definition: Option<MaterialDefinition>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MaterialDefinition {
     #[deprecated(note = "MaterialDefinition was deprecated in 1.7")]
     pub identifier: MaterialDefinitionInfo,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MaterialDefinitionInfo {
     pub name: String,
@@ -570,10 +692,16 @@ pub struct MaterialDefinitionInfo {
     pub params: Option<MaterialParams>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MaterialParams {
     pub render_mode: String,
+    #[serde(default)]
+    pub vertex_colors: bool,
+    #[serde(default)]
+    pub vertex_regions: bool,
+    #[serde(default)]
+    pub use_vertex_color_alpha: bool,
     pub transparency: Option<i32>,
     pub reflectivity: Option<i32>,
     pub shininess: Option<i32>,
@@ -583,15 +711,9 @@ pub struct MaterialParams {
     pub cast_shadows: Option<bool>,
     pub receive_shadows: Option<bool>,
     pub cull_face: Option<String>,
-    #[serde(default)]
-    pub vertex_colors: bool,
-    #[serde(default)]
-    pub vertex_regions: bool,
-    #[serde(default)]
-    pub use_vertex_color_alpha: bool,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Texture {
     pub encoding: Option<Vec<String>>,
@@ -601,7 +723,7 @@ pub struct Texture {
     pub channels: Option<Vec<String>>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DefaultGeometrySchema {
     pub header: Vec<HeaderAttribute>,
@@ -612,30 +734,30 @@ pub struct DefaultGeometrySchema {
     pub feature_attributes: FeatureAttribute,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FeatureAttribute {
     pub id: Option<Value>,
     pub face_range: Option<Value>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GeometryAttribute {
     pub value_type: String,
     pub values_per_element: i32,
     #[serde(default)]
-    pub byte_offset: f32,
+    pub byte_offset: i32,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 pub struct HeaderAttribute {
     pub property: String,
     #[serde(rename = "type")]
     pub dtype: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 pub struct VertexAttribute {
     pub position: Option<GeometryAttribute>,
     pub uv0: Option<GeometryAttribute>,
@@ -644,28 +766,29 @@ pub struct VertexAttribute {
     pub region: Option<GeometryAttribute>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 pub struct TextureSetDefinition {
     pub formats: Vec<TextureSetDefinitionFormat>,
     pub atlas: Option<bool>,
 }
 
 impl TextureSetDefinition {
-    pub fn has_compressed_textures(&self) -> bool {
+    pub fn has_compressed_textures(&self) -> Result<bool, &str> {
         match self.formats.len() {
-            1 => false,
-            _ => true,
+            1 => Ok(false),
+            2 => Ok(true),
+            _ => Err("Invalid number of texture formats"),
         }
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 pub struct TextureSetDefinitionFormat {
     pub name: String,
     pub format: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NodePage {
     pub nodes: Vec<Node>,
@@ -682,6 +805,22 @@ pub struct Node {
     pub lod_threshold: Option<f32>,
     pub children: Option<Vec<i32>>,
     pub mesh: Option<Mesh>,
+    pub level: Option<u8>,
+}
+
+impl Default for Node {
+    fn default() -> Self {
+        Self {
+            index: -1,
+            obb: OBB::default(),
+            parent_index: None,
+            lod_threshold: None,
+            children: None,
+            mesh: None,
+            level: None,
+        }
+    }
+
 }
 
 impl Node {
@@ -694,7 +833,7 @@ impl Node {
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OBB {
     pub center: [f32; 3],
@@ -702,7 +841,7 @@ pub struct OBB {
     pub quanternion: Option<[f32; 4]>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 pub struct Mesh {
     pub material: Option<MeshMaterial>,
     pub geometry: Option<MeshGeometry>,
@@ -717,6 +856,16 @@ pub struct MeshMaterial {
     texel_count_hint: i32,
 }
 
+impl Default for MeshMaterial {
+    fn default() -> Self {
+        Self {
+            definition: -1,
+            resource: -1,
+            texel_count_hint: -1,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MeshGeometry {
@@ -726,12 +875,29 @@ pub struct MeshGeometry {
     feature_count: i32,
 }
 
+impl Default for MeshGeometry {
+    fn default() -> Self {
+        Self {
+            definition: -1,
+            resource: -1,
+            vertex_count: -1,
+            feature_count: -1,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct MeshAttribute {
     resource: i32,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+impl Default for MeshAttribute {
+    fn default() -> Self {
+        Self { resource: -1 }
+    }
+}
+
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Metadata {
     #[serde(rename = "I3SVersion")]
@@ -751,6 +917,20 @@ pub struct FeatureData {
     pub geometries: Geometry,
 }
 
+impl Default for FeatureData {
+    fn default() -> Self {
+        Self {
+            id: -1,
+            position: vec![],
+            pivot_offset: [0.0, 0.0, 0.0],
+            mbb: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            layer: String::new(),
+            attributes: FeatureAttribute::default(),
+            geometries: Geometry::default(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Geometry {
@@ -761,6 +941,17 @@ pub struct Geometry {
     pub params: GeometryParams,
 }
 
+impl Default for Geometry {
+    fn default() -> Self {
+        Self {
+            id: -1,
+            geometry_type: String::new(),
+            transformation: [0.0; 16],
+            params: GeometryParams::default(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum GeometryParams {
@@ -769,7 +960,13 @@ pub enum GeometryParams {
     SingleComponent(SingleComponentParams),
 }
 
-#[derive(Debug, Clone, Deserialize)]
+impl Default for GeometryParams {
+    fn default() -> Self {
+        Self::Reference(GeometryReferenceParams::default())
+    }
+}
+
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GeometryReferenceParams {
     pub href: String,
@@ -779,7 +976,7 @@ pub struct GeometryReferenceParams {
     pub lod_geometry: Option<bool>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct VestedGeometryParams {
     pub geometry_type: String,
@@ -799,13 +996,26 @@ pub struct SingleComponentParams {
     pub region_id: Option<[i32; 1]>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+impl Default for SingleComponentParams {
+    fn default() -> Self {
+        Self {
+            id: -1,
+            material: None,
+            texture: None,
+            material_id: None,
+            texture_id: None,
+            region_id: None,
+        }
+    }
+}
+
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Statistics {
     pub stats: AttributeStatistics,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AttributeStatistics {
     pub total_values_count: Option<i32>,
@@ -830,6 +1040,16 @@ pub struct Histogram {
     counts: Vec<u16>,
 }
 
+impl Default for Histogram {
+    fn default() -> Self {
+        Self {
+            minimum: -1.0,
+            maximum: -1.0,
+            counts: vec![],
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ValueCount {
@@ -837,10 +1057,19 @@ pub struct ValueCount {
     count: i64,
 }
 
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct NodeIndexDocument {}
+impl Default for ValueCount {
+    fn default() -> Self {
+        Self {
+            value: String::new(),
+            count: -1,
+        }
+    }
+}
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SharedResource {}
+struct NodeIndexDocument {}
+
+#[derive(Default, Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SharedResource {}

@@ -22,7 +22,7 @@ impl From<serde_json::Error> for ZipReadError {
     }
 }
 pub trait ZipFileReader {
-    fn from_zip(zip_file: &mut ZipFile) -> Result<Self, ZipReadError>
+    fn from_zip(zip_file: ZipFile) -> Result<Self, ZipReadError>
     where Self: Sized + serde::de::DeserializeOwned {
         let json_string = decode_json_gz(zip_file)?;
         let result = serde_json::from_str(&json_string);
@@ -33,7 +33,7 @@ pub trait ZipFileReader {
     }
 }
 
-pub fn decode_json_gz<R: Read>(json_gz: &mut R) -> Result<String, Error> {
+pub fn decode_json_gz<R: Read>(json_gz: R) -> Result<String, Error> {
     let mut gzip_decoder = GzDecoder::new(json_gz);
     let mut json_content = String::new();
     gzip_decoder.read_to_string(&mut json_content)?;

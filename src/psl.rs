@@ -1,7 +1,7 @@
 use crate::cmn;
-use serde::{Deserialize};
+use serde::Deserialize;
 
-#[derive(Deserialize, Debug)]
+#[derive(Default, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SceneLayerInfo {
     pub id: i32,
@@ -32,7 +32,7 @@ pub struct SceneLayerInfo {
     pub full_extent: Option<cmn::FullExtent>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Default, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Store {
     pub profile: String,
@@ -71,7 +71,16 @@ pub struct GeometryDefinition {
     pub geometry_buffers: [GeometryBuffer; 1],
 }
 
-#[derive(Deserialize, Debug)]
+impl Default for GeometryDefinition {
+    fn default() -> Self {
+        Self {
+            topology: default_topology(),
+            geometry_buffers: [GeometryBuffer::default()],
+        }
+    }
+}
+
+#[derive(Default, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct GeometryBuffer {
     compressed_attributes: cmn::CompressedAttributes,

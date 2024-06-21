@@ -1,7 +1,7 @@
-use serde::{Deserialize};
+use serde::Deserialize;
 use crate::cmn;
 
-#[derive(Debug, Deserialize)]
+#[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SubLayer {
     pub id: i32,
@@ -15,7 +15,7 @@ pub struct SubLayer {
     pub sub_layers: Option<Vec<SubLayer>>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Statistics {
     pub summary: Vec<AttributeStats>,
@@ -27,7 +27,7 @@ pub enum MostFrequentValueTypeOptions {
     Int(i32),
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AttributeStats {
     pub field_name: String,
@@ -65,7 +65,28 @@ pub struct SceneLayerInfo {
     pub statistics_href: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+impl Default for SceneLayerInfo {
+    fn default() -> Self {
+        Self {
+            id: -1,
+            name: "".to_string(),
+            version: "".to_string(),
+            alias: "".to_string(),
+            layer_type: default_layer_type(),
+            filters: vec![],
+            sub_layers: vec![],
+            full_extent: cmn::FullExtent::default(),
+            spatial_reference: cmn::SpatialReference::default(),
+            descrition: None,
+            copyright_text: None,
+            height_model_info: None,
+            active_filter_id: None,
+            statistics_href: None,
+        }
+    }
+}
+
+#[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Filter {
     pub id: String,
@@ -77,7 +98,7 @@ pub struct Filter {
     pub filter_authoring_info: Option<FilterAuthoringInfo>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FilterBlock {
     pub title: String,
@@ -86,7 +107,7 @@ pub struct FilterBlock {
 }
 
 
-#[derive(Debug, Deserialize)]
+#[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FilterAuthoringInfo {}
 
@@ -102,6 +123,14 @@ pub struct FilterModeSolid {
     pub filter_type: String,
 }
 
+impl Default for FilterModeSolid {
+    fn default() -> Self {
+        Self {
+            filter_type: default_solid_filter_mode_type(),
+        }
+    }
+}
+
 fn default_wire_frame_filter_mode_type() -> String {
     "wireFrame".to_string()
 }
@@ -114,7 +143,16 @@ pub struct FilterModeWireFrame {
     pub edges: Option<Edges>,
 }
 
-#[derive(Debug, Deserialize)]
+impl Default for FilterModeWireFrame {
+    fn default() -> Self {
+        Self {
+            filter_type: default_wire_frame_filter_mode_type(),
+            edges: None,
+        }
+    }
+}
+
+#[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Edges {
     #[serde(rename = "type")]
@@ -130,4 +168,10 @@ pub struct Edges {
 pub enum FilterMode {
     Solid(FilterModeSolid),
     WireFrame(FilterModeWireFrame),
+}
+
+impl Default for FilterMode {
+    fn default() -> Self {
+        Self::Solid(FilterModeSolid::default())
+    }
 }
