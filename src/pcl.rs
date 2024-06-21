@@ -32,7 +32,7 @@ impl Default for SceneLayerInfo {
         Self {
             id: 0,
             layer_type: default_layer_type(),
-            name: "".to_string(),
+            name: String::new(),
             spatial_reference: SpatialReference::default(),
             store: Store::default(),
             attribute_storage_info: vec![],
@@ -180,9 +180,9 @@ impl Default for Renderer {
         Self {
             algorithm: Algorithm::default(),
             points_per_inch: 1.0,
-            field: "".to_string(),
-            field_transform_type: "".to_string(),
-            type_field: "".to_string(),
+            field: String::new(),
+            field_transform_type: String::new(),
+            type_field: String::new(),
             stops: vec![],
         }
     }
@@ -200,7 +200,7 @@ pub struct Algorithm {
 impl Default for Algorithm {
     fn default() -> Self {
         Self {
-            type_field: "".to_string(),
+            type_field: String::new(),
             scale_factor: 1.0,
         }
     }
@@ -334,7 +334,7 @@ impl Default for Label {
     fn default() -> Self {
         Self {
             value: -1,
-            label: "".to_string(),
+            label: String::new(),
         }
     }
 }
@@ -350,7 +350,7 @@ impl Default for BitFieldLabel {
     fn default() -> Self {
         Self {
             bit_number: -1,
-            label: "".to_string(),
+            label: String::new(),
         }
     }
 

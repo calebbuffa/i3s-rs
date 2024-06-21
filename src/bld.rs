@@ -69,9 +69,9 @@ impl Default for SceneLayerInfo {
     fn default() -> Self {
         Self {
             id: -1,
-            name: "".to_string(),
-            version: "".to_string(),
-            alias: "".to_string(),
+            name: String::new(),
+            version: String::new(),
+            alias: String::new(),
             layer_type: default_layer_type(),
             filters: vec![],
             sub_layers: vec![],
