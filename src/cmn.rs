@@ -3,6 +3,14 @@ use crate::io;
 use serde::Deserialize;
 use serde_json;
 
+pub fn get_node_page_index(node_index: &f32, nodes_per_page: &f32) -> i32 {
+    (node_index / nodes_per_page).floor() as i32
+}
+
+pub fn get_node_index_in_node_page(node_index: &f32, nodes_per_page: &f32) -> i32 {
+    (node_index % nodes_per_page) as i32
+}
+
 fn default_texture_value() -> f32 {
     1.0
 }
@@ -10,12 +18,14 @@ fn default_texture_value() -> f32 {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SceneLayerInfo {
-    pub id: i32,
+    pub id: usize,
     pub layer_type: String,
     pub version: String,
     pub capabilities: Vec<String>,
     pub store: Store,
     pub geometry_definitions: Vec<GeometryDefinition>,
+    #[serde(default)]
+    pub node_pages: NodePageDefinition,
     pub name: Option<String>,
     pub full_extent: Option<FullExtent>,
     pub spatial_reference: Option<SpatialReference>,
@@ -23,7 +33,6 @@ pub struct SceneLayerInfo {
     pub service_update_time_stamp: Option<ServiceUpdateTimeStamp>,
     pub height_model_info: Option<HeightModelInfo>,
     pub drawing_info: Option<DrawingInfo>,
-    pub node_pages: Option<NodePageDefinition>,
     pub material_definitions: Option<Vec<MaterialDefinitions>>,
     pub texture_set_definitions: Option<Vec<TextureSetDefinition>>,
     pub description: Option<String>,
@@ -45,12 +54,13 @@ impl io::ZipFileReader for SceneLayerInfo {}
 impl Default for SceneLayerInfo {
     fn default() -> Self {
         Self {
-            id: -1,
+            id: 0,
             layer_type: String::new(),
             version: String::new(),
             capabilities: vec![],
             store: Store::default(),
             geometry_definitions: vec![],
+            node_pages: NodePageDefinition::default(),
             name: None,
             full_extent: None,
             spatial_reference: None,
@@ -58,7 +68,6 @@ impl Default for SceneLayerInfo {
             service_update_time_stamp: None,
             height_model_info: None,
             drawing_info: None,
-            node_pages: None,
             material_definitions: None,
             texture_set_definitions: None,
             description: None,
@@ -155,7 +164,7 @@ pub struct StatisticsInfo {
 #[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AttributeStorageInfo {
-    pub key: String,
+    pub key: usize,
     pub name: String,
     pub header: Vec<HeaderValue>,
     pub ordering: Option<Vec<String>>,
@@ -613,7 +622,7 @@ pub struct NodePageDefinition {
     pub nodes_per_page: i32,
     pub lod_selection_metric_type: String,
     #[serde(default)]
-    pub root_index: i32, // default is 0
+    pub root_index: usize, // default is 0
 }
 
 impl Default for NodePageDefinition {
@@ -796,31 +805,20 @@ pub struct NodePage {
 
 impl io::ZipFileReader for NodePage {}
 
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Node {
-    pub index: i32,
-    pub obb: OBB,
-    pub parent_index: Option<i32>,
-    pub lod_threshold: Option<f32>,
-    pub children: Option<Vec<i32>>,
-    pub mesh: Option<Mesh>,
-    pub level: Option<u8>,
+fn default_children() -> Vec<usize> {
+    vec![]
 }
 
-impl Default for Node {
-    fn default() -> Self {
-        Self {
-            index: -1,
-            obb: OBB::default(),
-            parent_index: None,
-            lod_threshold: None,
-            children: None,
-            mesh: None,
-            level: None,
-        }
-    }
-
+#[derive(Default, Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Node {
+    pub index: usize,
+    pub obb: OBB,
+    #[serde(default = "default_children")]
+    pub children: Vec<usize>,
+    pub parent_index: Option<usize>,
+    pub lod_threshold: Option<f32>,
+    pub mesh: Option<Mesh>,
 }
 
 impl Node {
@@ -829,72 +827,73 @@ impl Node {
     }
 
     pub fn is_leaf(&self) -> bool {
-        self.children.is_none()
+        self.children.len() == 0
+    }
+
+    pub fn get_parent<'a>(&self, nodes: &'a Vec<Node>) -> Option<&'a Node> {
+        match self.parent_index {
+            Some(parent_index) => Some(&nodes[parent_index]),
+            None => None,
+        }
+    }
+
+    pub fn get_children<'a>(&self, nodes: &'a Vec<Node>) -> Vec<&'a Node> {
+        let mut children = vec![];
+        for child_index in &self.children {
+            children.push(&nodes[*child_index]);
+        }
+        children
     }
 }
 
 #[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OBB {
-    pub center: [f32; 3],
-    pub half_size: [f32; 3],
-    pub quanternion: Option<[f32; 4]>,
+    pub center: [f64; 3],
+    pub half_size: [f64; 3],
+    pub quanternion: Option<[f64; 4]>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize)]
 pub struct Mesh {
-    pub material: Option<MeshMaterial>,
-    pub geometry: Option<MeshGeometry>,
-    pub attribute: Option<MeshAttribute>,
+    #[serde(default)]
+    pub material: MeshMaterial,
+    #[serde(default)]
+    pub geometry: MeshGeometry,
+    #[serde(default)]
+    pub attribute: MeshAttribute,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MeshMaterial {
-    definition: i32,
-    resource: i32,
+    definition: usize,
+    resource: usize,
     texel_count_hint: i32,
 }
 
 impl Default for MeshMaterial {
     fn default() -> Self {
         Self {
-            definition: -1,
-            resource: -1,
+            definition: 0,
+            resource: 0,
             texel_count_hint: -1,
         }
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MeshGeometry {
-    definition: i32,
-    resource: i32,
-    vertex_count: i32,
-    feature_count: i32,
+    definition: usize,
+    resource: usize,
+    vertex_count: usize,
+    feature_count: usize,
 }
 
-impl Default for MeshGeometry {
-    fn default() -> Self {
-        Self {
-            definition: -1,
-            resource: -1,
-            vertex_count: -1,
-            feature_count: -1,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 pub struct MeshAttribute {
-    resource: i32,
-}
-
-impl Default for MeshAttribute {
-    fn default() -> Self {
-        Self { resource: -1 }
-    }
+    resource: usize,
 }
 
 #[derive(Default, Debug, Clone, Deserialize)]
@@ -902,13 +901,13 @@ impl Default for MeshAttribute {
 pub struct Metadata {
     #[serde(rename = "I3SVersion")]
     pub i3s_version: String,
-    pub node_count: i32,
+    pub node_count: usize,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FeatureData {
-    pub id: i32,
+    pub id: usize,
     pub position: Vec<f64>,
     pub pivot_offset: [f64; 3],
     pub mbb: [f64; 6],
@@ -920,7 +919,7 @@ pub struct FeatureData {
 impl Default for FeatureData {
     fn default() -> Self {
         Self {
-            id: -1,
+            id: 0,
             position: vec![],
             pivot_offset: [0.0, 0.0, 0.0],
             mbb: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -934,7 +933,7 @@ impl Default for FeatureData {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Geometry {
-    pub id: i32,
+    pub id: usize,
     #[serde(rename = "type")]
     pub geometry_type: String,
     pub transformation: [f64; 16],
@@ -944,7 +943,7 @@ pub struct Geometry {
 impl Default for Geometry {
     fn default() -> Self {
         Self {
-            id: -1,
+            id: 0,
             geometry_type: String::new(),
             transformation: [0.0; 16],
             params: GeometryParams::default(),
@@ -988,18 +987,18 @@ pub struct VestedGeometryParams {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SingleComponentParams {
-    pub id: i32,
+    pub id: usize,
     pub material: Option<String>,
     pub texture: Option<String>,
-    pub material_id: Option<i32>,
-    pub texture_id: Option<[i32; 1]>,
-    pub region_id: Option<[i32; 1]>,
+    pub material_id: Option<usize>,
+    pub texture_id: Option<[usize; 1]>,
+    pub region_id: Option<[usize; 1]>,
 }
 
 impl Default for SingleComponentParams {
     fn default() -> Self {
         Self {
-            id: -1,
+            id: 0,
             material: None,
             texture: None,
             material_id: None,
@@ -1018,12 +1017,12 @@ pub struct Statistics {
 #[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AttributeStatistics {
-    pub total_values_count: Option<i32>,
+    pub total_values_count: Option<usize>,
     pub min: Option<f32>,
     pub max: Option<f32>,
     pub min_time_str: Option<String>,
     pub max_time_str: Option<String>,
-    pub count: Option<i32>,
+    pub count: Option<usize>,
     pub sum: Option<f32>,
     pub avg: Option<f32>,
     pub stddev: Option<f32>,
@@ -1037,7 +1036,7 @@ pub struct AttributeStatistics {
 pub struct Histogram {
     minimum: f64,
     maximum: f64,
-    counts: Vec<u16>,
+    counts: Vec<u16>,  // will never be more than 256
 }
 
 impl Default for Histogram {
@@ -1050,20 +1049,11 @@ impl Default for Histogram {
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ValueCount {
     value: String,
-    count: i64,
-}
-
-impl Default for ValueCount {
-    fn default() -> Self {
-        Self {
-            value: String::new(),
-            count: -1,
-        }
-    }
+    count: usize,
 }
 
 #[derive(Default, Debug, Clone, Deserialize)]

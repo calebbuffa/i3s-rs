@@ -4,7 +4,7 @@ use crate::cmn;
 #[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SubLayer {
-    pub id: i32,
+    pub id: usize,
     pub name: String,
     pub layer_type: String,
     pub alias: Option<String>,
@@ -46,7 +46,7 @@ fn default_layer_type() -> String {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SceneLayerInfo {
-    pub id: i32,
+    pub id: usize,
     pub name: String,
     pub version: String,
     pub alias: String,
@@ -68,7 +68,7 @@ pub struct SceneLayerInfo {
 impl Default for SceneLayerInfo {
     fn default() -> Self {
         Self {
-            id: -1,
+            id: 0,
             name: String::new(),
             version: String::new(),
             alias: String::new(),

@@ -9,7 +9,7 @@ fn default_layer_type() -> String {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SceneLayerInfo {
-    pub id: i32,
+    pub id: usize,
     #[serde(default = "default_layer_type")]
     pub layer_type: String,
     pub name: String,
@@ -59,7 +59,7 @@ pub struct AttributeInfo {
     pub attribute_values: Option<Value>,
 }
 
-fn default_nodes_per_page() -> i32 {
+fn default_nodes_per_page() -> usize {
     64
 }
 
@@ -74,9 +74,9 @@ fn default_lod_selection_metric_type() -> String {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Index {
-    pub node_version: i32,
+    pub node_version: usize,
     #[serde(default = "default_nodes_per_page")]
-    pub nodes_per_page: i32,
+    pub nodes_per_page: usize,
     #[serde(default = "default_bounding_volume_type")]
     pub bounding_volume_type: String,
     #[serde(default = "default_lod_selection_metric_type")]
@@ -146,7 +146,7 @@ pub struct VertexAttributes {
 #[serde(rename_all = "camelCase")]
 pub struct Value {
     pub value_type: String,
-    pub values_per_element: i32,
+    pub values_per_element: usize,
 }
 
 #[derive(Default, Debug, Deserialize)]
@@ -163,7 +163,7 @@ pub struct DrawingInfo {
 }
 
 
-#[derive(Debug, Deserialize)]
+#[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Renderer {
     pub algorithm: Algorithm,
@@ -174,20 +174,6 @@ pub struct Renderer {
     pub type_field: String,
     pub stops: Vec<Stop>,
 }
-
-impl Default for Renderer {
-    fn default() -> Self {
-        Self {
-            algorithm: Algorithm::default(),
-            points_per_inch: 1.0,
-            field: String::new(),
-            field_transform_type: String::new(),
-            type_field: String::new(),
-            stops: vec![],
-        }
-    }
-}
-
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -206,21 +192,11 @@ impl Default for Algorithm {
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Stop {
     pub value: f64,
     pub color: Vec<i64>,
-}
-
-impl Default for Stop {
-    fn default() -> Self {
-        Self {
-            value: -1.0,
-            color: vec![],
-        }
-    }
-
 }
 
 #[derive(Debug, Deserialize)]
@@ -242,7 +218,7 @@ impl Default for Statistics {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AttributeStatistics {
     pub min: f64,
@@ -256,57 +232,22 @@ pub struct AttributeStatistics {
     pub most_frequent_values: Option<Vec<ValueCount>>,
 }
 
-impl Default for AttributeStatistics {
-    fn default() -> Self {
-        Self {
-            min: -1.0,
-            max: -1.0,
-            count: -1.0,
-            sum: None,
-            avg: None,
-            stddev: None,
-            variance: None,
-            histogram: None,
-            most_frequent_values: None,
-        }
-    }
-}
-
-#[derive(Debug, Deserialize)]
+#[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Histogram {
     pub minimum: f64,
     pub maximum: f64,
-    pub counts: Vec<u16>,
+    pub counts: Vec<usize>,
 }
 
-impl Default for Histogram {
-    fn default() -> Self {
-        Self {
-            minimum: -1.0,
-            maximum: -1.0,
-            counts: vec![],
-        }
-    }
-}
-
-#[derive(Debug, Deserialize)]
+#[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ValueCount {
     pub value: i32,
-    pub count: i64,
+    pub count: usize,
 }
 
-impl Default for ValueCount {
-    fn default() -> Self {
-        Self {
-            value: -1,
-            count: -1,
-        }
-    }
-}
-
-#[derive(Debug, Deserialize)]
+#[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Labels {
     pub labels: Option<Vec<Label>>,
@@ -314,84 +255,35 @@ pub struct Labels {
     pub bit_field_labels: Option<Vec<BitFieldLabel>>,
 }
 
-impl Default for Labels {
-    fn default() -> Self {
-        Self {
-            labels: None,
-            bit_field_labels: None,
-        }
-    }
-}
-
-#[derive(Debug, Deserialize)]
+#[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Label {
     pub value: i32,
     pub label: String,
 }
 
-impl Default for Label {
-    fn default() -> Self {
-        Self {
-            value: -1,
-            label: String::new(),
-        }
-    }
-}
-
-#[derive(Debug, Deserialize)]
+#[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BitFieldLabel {
     pub bit_number: i32,
     pub label: String,
 }
 
-impl Default for BitFieldLabel {
-    fn default() -> Self {
-        Self {
-            bit_number: -1,
-            label: String::new(),
-        }
-    }
-
-}
-
-#[derive(Debug, Deserialize)]
+#[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Node {
-    pub resource_id: i32,
-    pub first_child: i32,
-    pub child_count: i32,
+    pub resource_id: usize,
+    pub first_child: usize,
+    pub child_count: usize,
     pub obb: OBB,
-    pub vertex_count: Option<i32>,
+    pub vertex_count: Option<usize>,
     pub lod_threshold: Option<f64>,
 }
 
-impl Default for Node {
-    fn default() -> Self {
-        Self {
-            resource_id: 0,
-            first_child: 0,
-            child_count: 0,
-            obb: OBB::default(),
-            vertex_count: None,
-            lod_threshold: None,
-        }
-    }
-}
-
-#[derive(Debug, Deserialize)]
+#[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NodePage {
     pub nodes: Vec<Node>,
 }
 
-
-impl Default for NodePage {
-    fn default() -> Self {
-        Self {
-            nodes: vec![],
-        }
-    }
-}
 impl ZipFileReader for NodePage {}

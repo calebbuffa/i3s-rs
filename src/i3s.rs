@@ -2,9 +2,9 @@ use std::{fs::File, io::Read};
 
 use crate::bld;
 use crate::cmn;
+use crate::io::ZipFileReader;
 use crate::pcl;
 use crate::psl;
-use crate::io::ZipFileReader;
 
 fn find_node_page_paths(zip_archive: &zip::ZipArchive<File>) -> Vec<String> {
     zip_archive
@@ -22,21 +22,11 @@ enum I3S {
     Building,
 }
 
-#[derive(Debug)]
+#[derive(Default, Debug)]
 pub struct IntegratedMesh {
     pub scene_layer_info: cmn::SceneLayerInfo,
     pub metadata: cmn::Metadata,
     pub nodes: Vec<cmn::Node>,
-}
-
-impl Default for IntegratedMesh {
-    fn default() -> Self {
-        Self {
-            scene_layer_info: cmn::SceneLayerInfo::default(),
-            metadata: cmn::Metadata::default(),
-            nodes: vec![],
-        }
-    }
 }
 
 impl IntegratedMesh {
@@ -63,6 +53,11 @@ impl IntegratedMesh {
             integrated_mesh.nodes.extend(node_page.nodes);
         }
         integrated_mesh
+    }
+
+    pub fn get_root_node(&self) -> &cmn::Node {
+        let root_index = self.scene_layer_info.node_pages.root_index;
+        &self.nodes[root_index]
     }
 }
 

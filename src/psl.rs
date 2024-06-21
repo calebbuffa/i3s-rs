@@ -4,7 +4,7 @@ use serde::Deserialize;
 #[derive(Default, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SceneLayerInfo {
-    pub id: i32,
+    pub id: usize,
     pub layer_type: String,
     pub version: String,
     pub capabilities: Vec<String>,
@@ -63,21 +63,12 @@ fn default_topology() -> String {
     "point".to_string()
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Default, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct GeometryDefinition {
     #[serde(default = "default_topology")]
     pub topology: String,
     pub geometry_buffers: [GeometryBuffer; 1],
-}
-
-impl Default for GeometryDefinition {
-    fn default() -> Self {
-        Self {
-            topology: default_topology(),
-            geometry_buffers: [GeometryBuffer::default()],
-        }
-    }
 }
 
 #[derive(Default, Deserialize, Debug)]
