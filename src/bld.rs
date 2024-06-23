@@ -7,9 +7,13 @@ pub struct SubLayer {
     pub id: usize,
     pub name: String,
     pub layer_type: String,
-    pub alias: Option<String>,
-    pub discipline: Option<String>,
-    pub model_name: Option<String>,
+    #[serde(default)]
+    pub alias: String,
+    #[serde(default)]
+    pub discipline: String,
+    #[serde(default)]
+    pub model_name: String,
+    #[serde(default)]
     pub visibility: Option<bool>,
     #[serde(rename="sublayers")]
     pub sub_layers: Option<Vec<SubLayer>>,
@@ -32,8 +36,10 @@ pub enum MostFrequentValueTypeOptions {
 pub struct AttributeStats {
     pub field_name: String,
     pub sub_layer_ids: Vec<i32>,
-    pub label: Option<String>,
-    pub model_name: Option<String>,
+    #[serde(default)]
+    pub label: String,
+    #[serde(default)]
+    pub model_name: String,
     pub min: Option<f64>,
     pub max: Option<f64>,
     pub most_frequent_values: Option<Vec<MostFrequentValueTypeOptions>>
@@ -57,12 +63,15 @@ pub struct SceneLayerInfo {
     pub sub_layers: Vec<SubLayer>,
     pub full_extent: cmn::FullExtent,
     pub spatial_reference: cmn::SpatialReference,
-    pub descrition: Option<String>,
-    pub copyright_text: Option<String>,
+    #[serde(default)]
+    pub description: String,
+    #[serde(default)]
+    pub copyright_text: String,
     pub height_model_info: Option<cmn::HeightModelInfo>,
-    pub active_filter_id: Option<String>,
-    #[serde(rename="statisticsHRef")]
-    pub statistics_href: Option<String>,
+    #[serde(default)]
+    pub active_filter_id: String,
+    #[serde(rename="statisticsHRef", default)]
+    pub statistics_href: String,
 }
 
 impl Default for SceneLayerInfo {
@@ -77,11 +86,11 @@ impl Default for SceneLayerInfo {
             sub_layers: vec![],
             full_extent: cmn::FullExtent::default(),
             spatial_reference: cmn::SpatialReference::default(),
-            descrition: None,
-            copyright_text: None,
+            description: String::new(),
+            copyright_text: String::new(),
             height_model_info: None,
-            active_filter_id: None,
-            statistics_href: None,
+            active_filter_id: String::new(),
+            statistics_href: String::new(),
         }
     }
 }
