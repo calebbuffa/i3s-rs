@@ -1,5 +1,5 @@
-use serde::Deserialize;
 use crate::cmn;
+use serde::Deserialize;
 
 #[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -15,7 +15,7 @@ pub struct SubLayer {
     pub model_name: String,
     #[serde(default)]
     pub visibility: Option<bool>,
-    #[serde(rename="sublayers")]
+    #[serde(rename = "sublayers")]
     pub sub_layers: Option<Vec<SubLayer>>,
 }
 
@@ -42,7 +42,7 @@ pub struct AttributeStats {
     pub model_name: String,
     pub min: Option<f64>,
     pub max: Option<f64>,
-    pub most_frequent_values: Option<Vec<MostFrequentValueTypeOptions>>
+    pub most_frequent_values: Option<Vec<MostFrequentValueTypeOptions>>,
 }
 
 fn default_layer_type() -> String {
@@ -59,7 +59,7 @@ pub struct SceneLayerInfo {
     #[serde(default = "default_layer_type")]
     pub layer_type: String,
     pub filters: Vec<Filter>,
-    #[serde(rename="sublayers")]
+    #[serde(rename = "sublayers")]
     pub sub_layers: Vec<SubLayer>,
     pub full_extent: cmn::FullExtent,
     pub spatial_reference: cmn::SpatialReference,
@@ -70,7 +70,7 @@ pub struct SceneLayerInfo {
     pub height_model_info: Option<cmn::HeightModelInfo>,
     #[serde(default)]
     pub active_filter_id: String,
-    #[serde(rename="statisticsHRef", default)]
+    #[serde(rename = "statisticsHRef", default)]
     pub statistics_href: String,
 }
 
@@ -115,11 +115,9 @@ pub struct FilterBlock {
     pub filter_expression: String,
 }
 
-
 #[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FilterAuthoringInfo {}
-
 
 fn default_solid_filter_mode_type() -> String {
     "solid".to_string()
@@ -128,7 +126,7 @@ fn default_solid_filter_mode_type() -> String {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FilterModeSolid {
-    #[serde(rename="type", default = "default_solid_filter_mode_type")]
+    #[serde(rename = "type", default = "default_solid_filter_mode_type")]
     pub filter_type: String,
 }
 
@@ -147,7 +145,7 @@ fn default_wire_frame_filter_mode_type() -> String {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FilterModeWireFrame {
-    #[serde(rename="type", default = "default_wire_frame_filter_mode_type")]
+    #[serde(rename = "type", default = "default_wire_frame_filter_mode_type")]
     pub filter_type: String,
     pub edges: Option<Edges>,
 }

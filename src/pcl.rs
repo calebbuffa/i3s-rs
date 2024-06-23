@@ -121,7 +121,6 @@ fn default_encoding() -> String {
     "lepcc-xyz".to_string()
 }
 
-
 #[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DefaultGeometrySchema {
@@ -161,7 +160,6 @@ pub struct ElevationInfo {
 pub struct DrawingInfo {
     pub renderer: Renderer,
 }
-
 
 #[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]

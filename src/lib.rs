@@ -6,6 +6,6 @@ pub mod pcl;
 pub mod psl;
 mod stream;
 
-pub use i3s::{Formats, SceneLayers, Building, DDDObject, IntegratedMesh, Point, PointCloud};
+pub use i3s::{Building, DDDObject, Formats, IntegratedMesh, Point, PointCloud, SceneLayers};
 pub use io::SceneLayerPackage;
 pub use stream::Rest;

@@ -3,8 +3,8 @@ use std::fs::File;
 use std::io::{Error, Read};
 
 use flate2::read::GzDecoder;
-use zip::read::ZipFile;
 use serde_json;
+use zip::read::ZipFile;
 
 fn find_node_page_paths(zip_archive: &zip::ZipArchive<File>) -> Vec<String> {
     zip_archive
@@ -67,7 +67,6 @@ pub struct SceneLayerPackage {
 }
 
 impl SceneLayerPackage {
-
     // TODO add error type
     pub fn new(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let file = std::fs::File::open(path)?;

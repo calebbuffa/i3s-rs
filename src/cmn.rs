@@ -970,7 +970,6 @@ impl Metadata {
         let result = resp.json::<Self>().await?;
         Ok(result)
     }
-
 }
 
 #[derive(Debug, Clone, Deserialize)]

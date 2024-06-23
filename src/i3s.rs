@@ -15,7 +15,6 @@ pub struct IntegratedMesh {
 }
 
 impl IntegratedMesh {
-
     // TODO add error type
     pub fn from_slpk(slpk: &mut SceneLayerPackage) -> Result<Self, Box<dyn std::error::Error>> {
         let mut integrated_mesh = Self::default();
@@ -27,8 +26,7 @@ impl IntegratedMesh {
         {
             let mut metadata_zip_file = slpk.get("metadata.json")?;
             let mut metadata_string = String::new();
-            metadata_zip_file
-                .read_to_string(&mut metadata_string)?;
+            metadata_zip_file.read_to_string(&mut metadata_string)?;
             let metadata: cmn::Metadata = serde_json::from_str(&metadata_string)?;
             integrated_mesh.metadata = metadata;
         }
@@ -56,9 +54,10 @@ impl IntegratedMesh {
                     integrated_mesh.nodes.extend(node_page.nodes);
                     index += 1;
                 }
-                Err(_) => { // esri REST API returns success even when it fails
-                    break;  // if we can't parse the response, we assume we've
-                }           // reached the end of the node pages
+                Err(_) => {
+                    // esri REST API returns success even when it fails
+                    break; // if we can't parse the response, we assume we've
+                } // reached the end of the node pages
             }
         }
         Ok(integrated_mesh)
@@ -123,5 +122,4 @@ pub fn open(path: &str) -> Result<(Formats, SceneLayers), Box<dyn std::error::Er
     } else {
         unimplemented!("Rest API is not yet supported.")
     }
-
 }
