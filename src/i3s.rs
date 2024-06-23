@@ -1,26 +1,11 @@
-use std::{fs::File, io::Read};
+use std::io::Read;
 
 use crate::bld;
 use crate::cmn;
-use crate::io::ZipFileReader;
+use crate::io::{SLPKReader, SceneLayerPackage};
 use crate::pcl;
 use crate::psl;
-
-fn find_node_page_paths(zip_archive: &zip::ZipArchive<File>) -> Vec<String> {
-    zip_archive
-        .file_names()
-        .filter(|name| name.contains("nodepages"))
-        .map(|name| name.to_string())
-        .collect::<Vec<String>>()
-}
-
-enum I3S {
-    IntegratedMesh,
-    Point,
-    DDDObject,
-    PointCloud,
-    Building,
-}
+use crate::Rest;
 
 #[derive(Default, Debug)]
 pub struct IntegratedMesh {
@@ -30,32 +15,56 @@ pub struct IntegratedMesh {
 }
 
 impl IntegratedMesh {
-    pub fn from_slpk(zip_archive: &mut zip::ZipArchive<std::fs::File>) -> Self {
+
+    // TODO add error type
+    pub fn from_slpk(slpk: &mut SceneLayerPackage) -> Result<Self, Box<dyn std::error::Error>> {
         let mut integrated_mesh = Self::default();
         {
-            let scene_layer_zip_file = zip_archive.by_name("3dSceneLayer.json.gz").unwrap();
-            let scene_layer_info = cmn::SceneLayerInfo::from_zip(scene_layer_zip_file).unwrap();
+            let scene_layer_zip_file = slpk.get("3dSceneLayer.json.gz")?;
+            let scene_layer_info = cmn::SceneLayerInfo::from_slpk(scene_layer_zip_file)?;
             integrated_mesh.scene_layer_info = scene_layer_info;
         }
         {
-            let mut metadata_zip_file = zip_archive.by_name("metadata.json").unwrap();
+            let mut metadata_zip_file = slpk.get("metadata.json")?;
             let mut metadata_string = String::new();
             metadata_zip_file
-                .read_to_string(&mut metadata_string)
-                .unwrap();
-            let metadata: cmn::Metadata = serde_json::from_str(&metadata_string).unwrap();
+                .read_to_string(&mut metadata_string)?;
+            let metadata: cmn::Metadata = serde_json::from_str(&metadata_string)?;
             integrated_mesh.metadata = metadata;
         }
-        let node_page_paths = find_node_page_paths(zip_archive);
+        let node_page_paths = slpk.node_page_paths();
         for node_page_path in node_page_paths {
-            let file = zip_archive.by_name(&node_page_path).unwrap();
-            let node_page = cmn::NodePage::from_zip(file).unwrap();
+            let file = slpk.get(&node_page_path)?;
+            let node_page = cmn::NodePage::from_slpk(file)?;
             integrated_mesh.nodes.extend(node_page.nodes);
         }
-        integrated_mesh
+        Ok(integrated_mesh)
     }
 
-    pub fn get_root_node(&self) -> &cmn::Node {
+    // TODO add error type
+    pub async fn from_rest(stream: &mut Rest) -> Result<Self, Box<dyn std::error::Error>> {
+        let mut integrated_mesh = Self::default();
+        let scene_layer_info = cmn::SceneLayerInfo::from_rest(stream).await?;
+        integrated_mesh.scene_layer_info = scene_layer_info;
+        let mut index: u32 = 0;
+        loop {
+            let node_page_path = format!("layers/0/nodepages/{}", index);
+            let resp = stream.get(&node_page_path.as_str()).await?;
+            let node_page = resp.json::<cmn::NodePage>().await;
+            match node_page {
+                Ok(node_page) => {
+                    integrated_mesh.nodes.extend(node_page.nodes);
+                    index += 1;
+                }
+                Err(_) => { // esri REST API returns success even when it fails
+                    break;  // if we can't parse the response, we assume we've
+                }           // reached the end of the node pages
+            }
+        }
+        Ok(integrated_mesh)
+    }
+
+    pub fn root_node(&self) -> &cmn::Node {
         let root_index = self.scene_layer_info.node_pages.root_index;
         &self.nodes[root_index]
     }
@@ -86,4 +95,33 @@ pub struct Building {
     pub scene_layer: bld::SceneLayerInfo,
     pub sub_layer: bld::SubLayer,
     pub statistics: bld::Statistics,
+}
+
+pub enum Formats {
+    Rest(Rest),
+    SLPK(SceneLayerPackage),
+}
+pub enum SceneLayers {
+    IntegratedMesh,
+    Point,
+    DDDObject,
+    PointCloud,
+    Building,
+}
+
+const SCENE_LAYER_MAP: [(&str, SceneLayers); 5] = [
+    ("IntegratedMesh", SceneLayers::IntegratedMesh),
+    ("Point", SceneLayers::Point),
+    ("3DObject", SceneLayers::DDDObject),
+    ("PointCloud", SceneLayers::PointCloud),
+    ("Building", SceneLayers::Building),
+];
+
+pub fn open(path: &str) -> Result<(Formats, SceneLayers), Box<dyn std::error::Error>> {
+    if path.ends_with(".slpk") {
+        unimplemented!("SLPK files are not yet supported.")
+    } else {
+        unimplemented!("Rest API is not yet supported.")
+    }
+
 }
