@@ -1,5 +1,5 @@
 use crate::cmn::{Field, HeightModelInfo, ServiceUpdateTimeStamp, SpatialReference, OBB};
-use crate::io::ZipFileReader;
+use crate::io::SLPKReader;
 use serde::Deserialize;
 
 fn default_layer_type() -> String {
@@ -286,4 +286,4 @@ pub struct NodePage {
     pub nodes: Vec<Node>,
 }
 
-impl ZipFileReader for NodePage {}
+impl SLPKReader for NodePage {}
