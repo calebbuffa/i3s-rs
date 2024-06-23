@@ -1,4 +1,6 @@
-use crate::io;
+use std::error::Error;
+
+use crate::{io, Rest};
 
 use serde::Deserialize;
 use serde_json;
@@ -20,24 +22,28 @@ fn default_texture_value() -> f32 {
 pub struct SceneLayerInfo {
     pub id: usize,
     pub layer_type: String,
-    pub version: String,
     pub capabilities: Vec<String>,
     pub store: Store,
     pub geometry_definitions: Vec<GeometryDefinition>,
     #[serde(default)]
     pub node_pages: NodePageDefinition,
-    pub name: Option<String>,
+    #[serde(default)]
+    pub name: String,
     pub full_extent: Option<FullExtent>,
     pub spatial_reference: Option<SpatialReference>,
-    pub alias: Option<String>,
+    #[serde(default)]
+    pub alias: String,
     pub service_update_time_stamp: Option<ServiceUpdateTimeStamp>,
     pub height_model_info: Option<HeightModelInfo>,
     pub drawing_info: Option<DrawingInfo>,
     pub material_definitions: Option<Vec<MaterialDefinitions>>,
     pub texture_set_definitions: Option<Vec<TextureSetDefinition>>,
-    pub description: Option<String>,
-    pub copyright_text: Option<String>,
-    pub href: Option<String>,
+    #[serde(default)]
+    pub description: String,
+    #[serde(default)]
+    pub copyright_text: String,
+    #[serde(default)]
+    pub href: String,
     pub cached_drawing_info: Option<CachedDrawingInfo>,
     #[serde(rename = "disablePopup")]
     pub disable_pop_up: Option<bool>,
@@ -50,29 +56,28 @@ pub struct SceneLayerInfo {
     pub elevation_info: Option<ElevationInfo>,
 }
 
-impl io::ZipFileReader for SceneLayerInfo {}
+impl io::SLPKReader for SceneLayerInfo {}
 impl Default for SceneLayerInfo {
     fn default() -> Self {
         Self {
             id: 0,
             layer_type: String::new(),
-            version: String::new(),
             capabilities: vec![],
             store: Store::default(),
             geometry_definitions: vec![],
             node_pages: NodePageDefinition::default(),
-            name: None,
+            name: String::new(),
             full_extent: None,
             spatial_reference: None,
-            alias: None,
+            alias: String::new(),
             service_update_time_stamp: None,
             height_model_info: None,
             drawing_info: None,
             material_definitions: None,
             texture_set_definitions: None,
-            description: None,
-            copyright_text: None,
-            href: None,
+            description: String::new(),
+            copyright_text: String::new(),
+            href: String::new(),
             cached_drawing_info: None,
             disable_pop_up: None,
             attribute_storage_info: None,
@@ -85,12 +90,26 @@ impl Default for SceneLayerInfo {
     }
 }
 
+impl SceneLayerInfo {
+    fn rest_path() -> String {
+        format!("layers/{}", 0)
+    }
+
+    pub async fn from_rest(stream: &Rest) -> Result<Self, Box<dyn Error>> {
+        let resp = stream.get(Self::rest_path().as_str()).await?;
+        let result = resp.json::<Self>().await?;
+        Ok(result)
+    }
+}
+
 #[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ElevationInfo {
-    pub mode: Option<String>,
+    #[serde(default)]
+    pub mode: String,
     pub offset: Option<f32>,
-    pub unit: Option<String>,
+    #[serde(default)]
+    pub unit: String,
 }
 
 #[derive(Default, Debug, Clone, Deserialize)]
@@ -99,7 +118,8 @@ pub struct Field {
     pub name: String,
     #[serde(rename = "type")]
     pub field_type: String,
-    pub alias: Option<String>,
+    #[serde(default)]
+    pub alias: String,
     pub domain: Option<Domain>,
 }
 
@@ -110,11 +130,15 @@ pub struct Domain {
     pub domain_type: String,
     pub name: String,
     pub coded_values: Option<Vec<DomainCodedValue>>,
-    pub description: Option<String>,
+    #[serde(default)]
+    pub description: String,
     pub range: Option<[f32; 2]>,
-    pub field_type: Option<String>,
-    pub merge_policy: Option<String>,
-    pub split_policy: Option<String>,
+    #[serde(default)]
+    pub field_type: String,
+    #[serde(default)]
+    pub merge_policy: String,
+    #[serde(default)]
+    pub split_policy: String,
 }
 
 #[derive(Default, Debug, Clone, Deserialize)]
@@ -127,9 +151,11 @@ pub struct DomainCodedValue {
 #[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PopUpInfo {
-    pub title: Option<String>,
+    #[serde(default)]
+    pub title: String,
     pub media_infos: Option<Vec<Option<serde_json::Value>>>,
-    pub description: Option<String>,
+    #[serde(default)]
+    pub description: String,
     pub field_infos: Option<Vec<FieldInfo>>,
     pub popup_elements: Option<Vec<PopupElement>>,
     pub expression_infos: Option<Vec<Option<serde_json::Value>>>,
@@ -138,18 +164,21 @@ pub struct PopUpInfo {
 #[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FieldInfo {
-    pub field_name: Option<String>,
+    #[serde(default)]
+    pub field_name: String,
     pub visible: Option<bool>,
     pub is_editable: Option<bool>,
-    pub label: Option<String>,
+    #[serde(default)]
+    pub label: String,
 }
 
 #[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PopupElement {
-    pub text: Option<String>,
-    #[serde(rename = "type")]
-    pub popup_element_type: Option<String>,
+    #[serde(default)]
+    pub text: String,
+    #[serde(rename = "type", default)]
+    pub popup_element_type: String,
     pub field_infos: Option<Vec<FieldInfo>>,
 }
 
@@ -188,7 +217,8 @@ fn default_time_encoding() -> String {
 #[serde(rename_all = "camelCase")]
 pub struct Value {
     pub value_type: String,
-    pub encoding: Option<String>,
+    #[serde(default)]
+    pub encoding: String,
     #[serde(default = "default_time_encoding")]
     pub time_encoding: String,
     pub values_per_element: Option<f32>,
@@ -198,7 +228,7 @@ impl Default for Value {
     fn default() -> Self {
         Self {
             value_type: String::new(),
-            encoding: None,
+            encoding: String::new(),
             time_encoding: default_time_encoding(),
             values_per_element: None,
         }
@@ -220,26 +250,28 @@ pub struct DrawingInfo {
 #[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Renderer {
-    #[serde(rename = "type")]
-    pub renderer_type: Option<String>,
-    pub label: Option<String>,
-    pub description: Option<String>,
+    #[serde(rename = "type", default)]
+    pub renderer_type: String,
+    #[serde(default)]
+    pub label: String,
+    #[serde(default)]
+    pub description: String,
     pub symbol: Option<Symbol>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Symbol {
-    #[serde(rename = "type")]
-    pub symbol_type: Option<String>,
+    #[serde(rename = "type", default)]
+    pub symbol_type: String,
     pub symbol_layers: Option<Vec<SymbolLayer>>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SymbolLayer {
-    #[serde(rename = "type")]
-    pub symbol_layer_type: Option<String>,
+    #[serde(rename = "type", default)]
+    pub symbol_layer_type: String,
     pub material: Option<Material>,
 }
 
@@ -282,7 +314,8 @@ pub struct SpatialReference {
     pub latest_wkid: Option<i32>,
     pub vcs_wkid: Option<i32>,
     pub wkid: Option<i32>,
-    pub wkt: Option<String>,
+    #[serde(default)]
+    pub wkt: String,
 }
 
 fn default_geometry_definition_topology() -> String {
@@ -506,17 +539,21 @@ pub struct GeometryBufferMetadata {
     #[serde(rename = "type")]
     pub dtype: String,
     pub component: i32,
-    pub binding: Option<String>,
-    pub encoding: Option<String>,
+    #[serde(default)]
+    pub binding: String,
+    #[serde(default)]
+    pub encoding: String,
 }
 
 #[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HeightModelInfo {
-    pub height_model: Option<String>,
-    #[serde(rename = "vertCRS")]
-    pub vert_crs: Option<String>,
-    pub height_unit: Option<String>,
+    #[serde(default)]
+    pub height_model: String,
+    #[serde(rename = "vertCRS", default)]
+    pub vert_crs: String,
+    #[serde(default)]
+    pub height_unit: String,
 }
 
 fn default_alpha_cutoff() -> f32 {
@@ -536,7 +573,8 @@ pub struct MaterialDefinitions {
     pub occlusion_texture: Option<MaterialTexture>,
     pub emissive_texture: Option<MaterialTexture>,
     pub emissive_factor: Option<[f32; 3]>,
-    pub alpha_mode: Option<String>,
+    #[serde(default)]
+    pub alpha_mode: String,
     #[serde(default = "default_alpha_cutoff")]
     pub alpha_cutoff: f32,
     #[serde(default)]
@@ -553,7 +591,7 @@ impl Default for MaterialDefinitions {
             occlusion_texture: None,
             emissive_texture: None,
             emissive_factor: None,
-            alpha_mode: None,
+            alpha_mode: String::new(),
             alpha_cutoff: default_alpha_cutoff(),
             double_sided: false,
             cull_face: default_cull_face(),
@@ -647,20 +685,27 @@ impl Default for ServiceUpdateTimeStamp {
     }
 }
 
+fn default_root_node_path() -> String {
+    "./nodes/root".to_string()
+}
+
 #[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Store {
     pub profile: String,
     pub version: String,
-    pub id: Option<String>,
+    #[serde(default = "default_root_node_path")]
+    pub root_node: String,
+    #[serde(default)]
+    pub id: String,
     pub resource_pattern: Option<Vec<String>>,
-    pub root_node: Option<String>,
     pub extent: Option<Vec<f64>>,
-    #[serde(rename = "indexCRS")]
-    pub index_crs: Option<String>,
-    #[serde(rename = "vertexCRS")]
-    pub vertex_crs: Option<String>,
-    pub normal_reference_frame: Option<String>,
+    #[serde(rename = "indexCRS", default)]
+    pub index_crs: String,
+    #[serde(rename = "vertexCRS", default)]
+    pub vertex_crs: String,
+    #[serde(default)]
+    pub normal_reference_frame: String,
     pub default_geometry_schema: Option<DefaultGeometrySchema>,
     #[deprecated(note = "Deprecated in 1.7")]
     pub nid_encoding: Option<String>,
@@ -695,9 +740,10 @@ pub struct MaterialDefinition {
 #[serde(rename_all = "camelCase")]
 pub struct MaterialDefinitionInfo {
     pub name: String,
-    #[serde(rename = "type")]
-    pub dtype: Option<String>,
-    pub href: Option<String>,
+    #[serde(rename = "type", default)]
+    pub dtype: String,
+    #[serde(default)]
+    pub href: String,
     pub params: Option<MaterialParams>,
 }
 
@@ -719,7 +765,8 @@ pub struct MaterialParams {
     pub specular: Option<Vec<f32>>,
     pub cast_shadows: Option<bool>,
     pub receive_shadows: Option<bool>,
-    pub cull_face: Option<String>,
+    #[serde(default)]
+    pub cull_face: String,
 }
 
 #[derive(Default, Debug, Clone, Deserialize)]
@@ -728,7 +775,8 @@ pub struct Texture {
     pub encoding: Option<Vec<String>>,
     pub wrap: Option<Vec<String>>,
     pub atlas: Option<bool>,
-    pub uv_set: Option<String>,
+    #[serde(default)]
+    pub uv_set: String,
     pub channels: Option<Vec<String>>,
 }
 
@@ -803,7 +851,7 @@ pub struct NodePage {
     pub nodes: Vec<Node>,
 }
 
-impl io::ZipFileReader for NodePage {}
+impl io::SLPKReader for NodePage {}
 
 fn default_children() -> Vec<usize> {
     vec![]
@@ -830,19 +878,27 @@ impl Node {
         self.children.len() == 0
     }
 
-    pub fn get_parent<'a>(&self, nodes: &'a Vec<Node>) -> Option<&'a Node> {
+    pub fn parent<'a>(&self, nodes: &'a Vec<Node>) -> Option<&'a Node> {
         match self.parent_index {
             Some(parent_index) => Some(&nodes[parent_index]),
             None => None,
         }
     }
 
-    pub fn get_children<'a>(&self, nodes: &'a Vec<Node>) -> Vec<&'a Node> {
+    pub fn children<'a>(&self, nodes: &'a Vec<Node>) -> Vec<&'a Node> {
         let mut children = vec![];
         for child_index in &self.children {
             children.push(&nodes[*child_index]);
         }
         children
+    }
+
+    pub fn geometry(&self) {
+        unimplemented!()
+    }
+
+    pub fn texture(&self) {
+        unimplemented!()
     }
 }
 
@@ -902,6 +958,19 @@ pub struct Metadata {
     #[serde(rename = "I3SVersion")]
     pub i3s_version: String,
     pub node_count: usize,
+}
+
+impl Metadata {
+    fn rest_path() -> String {
+        "metadata.json".to_string()
+    }
+
+    pub async fn from_rest(stream: &Rest) -> Result<Self, Box<dyn Error>> {
+        let resp = stream.get(Self::rest_path().as_str()).await?;
+        let result = resp.json::<Self>().await?;
+        Ok(result)
+    }
+
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -969,8 +1038,8 @@ impl Default for GeometryParams {
 #[serde(rename_all = "camelCase")]
 pub struct GeometryReferenceParams {
     pub href: String,
-    #[serde(rename = "type")]
-    pub geometry_type: Option<String>,
+    #[serde(rename = "type", default)]
+    pub geometry_type: String,
     pub face_range: Option<Vec<i32>>,
     pub lod_geometry: Option<bool>,
 }
@@ -984,28 +1053,17 @@ pub struct VestedGeometryParams {
     pub faces: GeometryAttribute,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SingleComponentParams {
     pub id: usize,
-    pub material: Option<String>,
-    pub texture: Option<String>,
+    #[serde(default)]
+    pub material: String,
+    #[serde(default)]
+    pub texture: String,
     pub material_id: Option<usize>,
     pub texture_id: Option<[usize; 1]>,
     pub region_id: Option<[usize; 1]>,
-}
-
-impl Default for SingleComponentParams {
-    fn default() -> Self {
-        Self {
-            id: 0,
-            material: None,
-            texture: None,
-            material_id: None,
-            texture_id: None,
-            region_id: None,
-        }
-    }
 }
 
 #[derive(Default, Debug, Clone, Deserialize)]
@@ -1020,8 +1078,10 @@ pub struct AttributeStatistics {
     pub total_values_count: Option<usize>,
     pub min: Option<f32>,
     pub max: Option<f32>,
-    pub min_time_str: Option<String>,
-    pub max_time_str: Option<String>,
+    #[serde(default)]
+    pub min_time_str: String,
+    #[serde(default)]
+    pub max_time_str: String,
     pub count: Option<usize>,
     pub sum: Option<f32>,
     pub avg: Option<f32>,
@@ -1036,7 +1096,7 @@ pub struct AttributeStatistics {
 pub struct Histogram {
     minimum: f64,
     maximum: f64,
-    counts: Vec<u16>,  // will never be more than 256
+    counts: Vec<u16>, // will never be more than 256
 }
 
 impl Default for Histogram {
