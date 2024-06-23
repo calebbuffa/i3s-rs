@@ -4,15 +4,22 @@ This project is a minimal API for *reading* Esri's I3S file format.
 
 ## To Do
 
-- [x] Common API
 - [x] Integrated Mesh API
 - [x] Point Cloud API
 - [x] Building API
 - [x] Point API
 - [x] 3D Object API
-- [ ] Read from `.slpk` file
-- [ ] Stream from REST
-- [ ] Hash Table
+- [x] Read from `.slpk` file
+- [x] Stream from REST
+- [ ] Do not return `Box<dyn Error>`
+- [ ] `open(&str) -> (Formats, SceneLayers)`
+- [ ] Create common structs, traits, etc. to minimize repeated code between secne layer types
+- [ ] Get node geometries
+- [ ] Get node textures/materials/colors
+- [ ] Get node attributes
+- [ ] Get node features
+- [ ] Add dependency features
+- [ ] Read Hash Table
 
 ## Examples
 
