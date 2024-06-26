@@ -7,13 +7,9 @@ pub struct SubLayer {
     pub id: usize,
     pub name: String,
     pub layer_type: String,
-    #[serde(default)]
-    pub alias: String,
-    #[serde(default)]
-    pub discipline: String,
-    #[serde(default)]
-    pub model_name: String,
-    #[serde(default)]
+    pub alias: Option<String>,
+    pub discipline: Option<String>,
+    pub model_name: Option<String>,
     pub visibility: Option<bool>,
     #[serde(rename = "sublayers")]
     pub sub_layers: Option<Vec<SubLayer>>,
@@ -51,14 +47,14 @@ fn default_layer_type() -> String {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SceneLayerInfo {
+pub struct SceneLayerInformation {
     pub id: usize,
     pub name: String,
     pub version: String,
-    pub alias: String,
+    pub alias: Option<String>,
     #[serde(default = "default_layer_type")]
     pub layer_type: String,
-    pub filters: Vec<Filter>,
+    pub filters: Option<Vec<Filter>>,
     #[serde(rename = "sublayers")]
     pub sub_layers: Vec<SubLayer>,
     pub full_extent: cmn::FullExtent,
@@ -74,15 +70,15 @@ pub struct SceneLayerInfo {
     pub statistics_href: String,
 }
 
-impl Default for SceneLayerInfo {
+impl Default for SceneLayerInformation {
     fn default() -> Self {
         Self {
             id: 0,
             name: String::new(),
             version: String::new(),
-            alias: String::new(),
+            alias: None,
             layer_type: default_layer_type(),
-            filters: vec![],
+            filters: None,
             sub_layers: vec![],
             full_extent: cmn::FullExtent::default(),
             spatial_reference: cmn::SpatialReference::default(),

@@ -3,7 +3,7 @@ use serde::Deserialize;
 
 #[derive(Default, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct SceneLayerInfo {
+pub struct SceneLayerInformation {
     pub id: usize,
     pub layer_type: String,
     pub version: String,
@@ -21,13 +21,13 @@ pub struct SceneLayerInfo {
     pub cached_drawing_info: Option<cmn::CachedDrawingInfo>,
     pub drawing_info: Option<cmn::DrawingInfo>,
     pub elevation_info: Option<cmn::ElevationInfo>,
-    #[serde(rename = "popupInfo")]
-    pub pop_up_info: Option<cmn::PopUpInfo>,
+    #[serde(rename = "PopupInfo")]
+    pub popup_info: Option<cmn::PopupInfo>,
     #[serde(rename = "disablePopup")]
     pub disable_pop_up: Option<bool>,
     pub fields: Option<Vec<cmn::Field>>,
-    pub attribute_storage_info: Option<cmn::AttributeStorageInfo>,
-    pub statistics_info: Option<cmn::StatisticsInfo>,
+    pub attribute_storage_info: Option<Vec<cmn::AttributeStorageInfo>>,
+    pub statistics_info: Option<Vec<cmn::StatisticsInfo>>,
     pub point_node_pages: Option<cmn::NodePageDefinition>,
     pub full_extent: Option<cmn::FullExtent>,
 }
@@ -74,5 +74,5 @@ pub struct GeometryDefinition {
 #[derive(Default, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct GeometryBuffer {
-    compressed_attributes: cmn::CompressedAttributes,
+    pub compressed_attributes: cmn::CompressedAttributes,
 }

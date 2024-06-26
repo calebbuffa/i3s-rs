@@ -1,5 +1,5 @@
 use crate::cmn::{Field, HeightModelInfo, ServiceUpdateTimeStamp, SpatialReference, OBB};
-use crate::io::SLPKReader;
+use crate::io::ZipFileReader;
 use serde::Deserialize;
 
 fn default_layer_type() -> String {
@@ -8,14 +8,14 @@ fn default_layer_type() -> String {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SceneLayerInfo {
+pub struct SceneLayerInformation {
     pub id: usize,
     #[serde(default = "default_layer_type")]
     pub layer_type: String,
     pub name: String,
-    pub spatial_reference: SpatialReference,
     pub store: Store,
     pub attribute_storage_info: Vec<AttributeInfo>,
+    pub spatial_reference: Option<SpatialReference>,
     pub alias: Option<String>,
     pub desc: Option<String>,
     pub copyright_text: Option<String>,
@@ -27,13 +27,13 @@ pub struct SceneLayerInfo {
     pub fields: Option<Vec<Field>>,
 }
 
-impl Default for SceneLayerInfo {
+impl Default for SceneLayerInformation {
     fn default() -> Self {
         Self {
             id: 0,
             layer_type: default_layer_type(),
             name: String::new(),
-            spatial_reference: SpatialReference::default(),
+            spatial_reference: None,
             store: Store::default(),
             attribute_storage_info: vec![],
             alias: None,
@@ -127,7 +127,6 @@ pub struct DefaultGeometrySchema {
     pub vertex_attributes: VertexAttributes,
     #[serde(default = "default_geometry_type")]
     pub geometry_type: String,
-    pub header: Option<()>, // TODO: this is just an empty array
     #[serde(default = "default_topology")]
     pub topology: String,
     #[serde(default = "default_encoding")]
@@ -164,13 +163,13 @@ pub struct DrawingInfo {
 #[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Renderer {
-    pub algorithm: Algorithm,
+    pub algorithm: Option<Algorithm>,
     pub points_per_inch: f64,
     pub field: String,
     pub field_transform_type: String,
     #[serde(rename = "type")]
     pub type_field: String,
-    pub stops: Vec<Stop>,
+    pub stops: Option<Vec<Stop>>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -197,23 +196,13 @@ pub struct Stop {
     pub color: Vec<i64>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Statistics {
     pub attribute: Option<String>,
     #[serde(rename = "stats")]
     pub attribute_statistics: Option<AttributeStatistics>,
     pub labels: Option<Labels>,
-}
-
-impl Default for Statistics {
-    fn default() -> Self {
-        Self {
-            attribute: None,
-            attribute_statistics: None,
-            labels: None,
-        }
-    }
 }
 
 #[derive(Default, Debug, Deserialize)]
@@ -284,4 +273,4 @@ pub struct NodePage {
     pub nodes: Vec<Node>,
 }
 
-impl SLPKReader for NodePage {}
+impl ZipFileReader for NodePage {}

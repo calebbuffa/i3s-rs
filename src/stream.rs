@@ -1,31 +1,12 @@
-use reqwest;
 use std::error::Error;
-use url::Url;
 
-pub struct Rest {
-    base: Url,
-    client: reqwest::Client,
-}
+use reqwest::Client;
+use serde_json::Value;
 
-impl Rest {
-    pub fn new(base: Url) -> Self {
-        let client = reqwest::Client::new();
-        Self { base, client }
-    }
-
-    // TODO add error type
-    pub async fn get(&self, path: &str) -> Result<reqwest::Response, Box<dyn Error>> {
-        match path {
-            "" => {
-                let url = self.base.clone();
-                let resp = self.client.get(url).send().await?;
-                return Ok(resp);
-            }
-            _ => {
-                let url = self.base.join(path)?;
-                let resp = self.client.get(url).send().await?;
-                return Ok(resp);
-            }
-        }
-    }
+pub async fn request_scene_layer_info(
+    client: &Client,
+) -> Result<serde_json::Value, Box<dyn Error>> {
+    let resp = client.get("layers/0").send().await?;
+    let val = resp.json::<Value>().await?;
+    Ok(val)
 }

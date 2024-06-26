@@ -1,25 +1,17 @@
 use std::error::Error;
 
-use crate::{io, Rest};
+use crate::{io, Service};
 
 use serde::Deserialize;
 use serde_json;
-
-pub fn get_node_page_index(node_index: &f32, nodes_per_page: &f32) -> i32 {
-    (node_index / nodes_per_page).floor() as i32
-}
-
-pub fn get_node_index_in_node_page(node_index: &f32, nodes_per_page: &f32) -> i32 {
-    (node_index % nodes_per_page) as i32
-}
 
 fn default_texture_value() -> f32 {
     1.0
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SceneLayerInfo {
+pub struct SceneLayerInformation {
     pub id: usize,
     pub layer_type: String,
     pub capabilities: Vec<String>,
@@ -27,77 +19,47 @@ pub struct SceneLayerInfo {
     pub geometry_definitions: Vec<GeometryDefinition>,
     #[serde(default)]
     pub node_pages: NodePageDefinition,
-    #[serde(default)]
     pub name: String,
     pub full_extent: Option<FullExtent>,
     pub spatial_reference: Option<SpatialReference>,
-    #[serde(default)]
-    pub alias: String,
+    pub alias: Option<String>,
     pub service_update_time_stamp: Option<ServiceUpdateTimeStamp>,
     pub height_model_info: Option<HeightModelInfo>,
     pub drawing_info: Option<DrawingInfo>,
     pub material_definitions: Option<Vec<MaterialDefinitions>>,
     pub texture_set_definitions: Option<Vec<TextureSetDefinition>>,
-    #[serde(default)]
-    pub description: String,
-    #[serde(default)]
-    pub copyright_text: String,
-    #[serde(default)]
-    pub href: String,
+    pub description: Option<String>,
+    pub copyright_text: Option<String>,
+    pub href: Option<String>,
     pub cached_drawing_info: Option<CachedDrawingInfo>,
     #[serde(rename = "disablePopup")]
     pub disable_pop_up: Option<bool>,
     pub attribute_storage_info: Option<Vec<AttributeStorageInfo>>,
     pub statistics_info: Option<Vec<StatisticsInfo>>,
     pub z_factor: Option<f32>,
-    #[serde(rename = "popupInfo")]
-    pub pop_up_info: Option<PopUpInfo>,
+    pub popup_info: Option<PopupInfo>,
     pub fields: Option<Vec<Field>>,
     pub elevation_info: Option<ElevationInfo>,
 }
 
-impl io::SLPKReader for SceneLayerInfo {}
-impl Default for SceneLayerInfo {
-    fn default() -> Self {
-        Self {
-            id: 0,
-            layer_type: String::new(),
-            capabilities: vec![],
-            store: Store::default(),
-            geometry_definitions: vec![],
-            node_pages: NodePageDefinition::default(),
-            name: String::new(),
-            full_extent: None,
-            spatial_reference: None,
-            alias: String::new(),
-            service_update_time_stamp: None,
-            height_model_info: None,
-            drawing_info: None,
-            material_definitions: None,
-            texture_set_definitions: None,
-            description: String::new(),
-            copyright_text: String::new(),
-            href: String::new(),
-            cached_drawing_info: None,
-            disable_pop_up: None,
-            attribute_storage_info: None,
-            statistics_info: None,
-            z_factor: None,
-            pop_up_info: None,
-            fields: None,
-            elevation_info: None,
-        }
-    }
-}
+// impl TryFrom<R: Read> for SceneLayerInformation {
+//     type Error = io::ZipFileReadError;
 
-impl SceneLayerInfo {
+//     fn try_from(zip_file: ZipFile<'_>) -> Result<Self, Self::Error> {
+//         let content = io::decode_json_gz(zip_file)?;
+//         let result = serde_json::from_str(content.as_str())?;
+//         Ok(result)
+//     }
+// }
+
+impl SceneLayerInformation {
     fn rest_path() -> String {
         format!("layers/{}", 0)
     }
 
-    pub async fn from_rest(stream: &Rest) -> Result<Self, Box<dyn Error>> {
-        let resp = stream.get(Self::rest_path().as_str()).await?;
-        let result = resp.json::<Self>().await?;
+    pub async fn from_rest(stream: &Service) -> Result<Self, Box<dyn Error>> {
+        let bytes = stream.get(Self::rest_path().as_str()).await?;
+        let result = serde_json::from_slice::<Self>(&bytes)?;
         Ok(result)
     }
 }
@@ -118,8 +80,7 @@ pub struct Field {
     pub name: String,
     #[serde(rename = "type")]
     pub field_type: String,
-    #[serde(default)]
-    pub alias: String,
+    pub alias: Option<String>,
     pub domain: Option<Domain>,
 }
 
@@ -150,7 +111,7 @@ pub struct DomainCodedValue {
 
 #[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct PopUpInfo {
+pub struct PopupInfo {
     #[serde(default)]
     pub title: String,
     pub media_infos: Option<Vec<Option<serde_json::Value>>>,
@@ -193,7 +154,7 @@ pub struct StatisticsInfo {
 #[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AttributeStorageInfo {
-    pub key: usize,
+    pub key: String,
     pub name: String,
     pub header: Vec<HeaderValue>,
     pub ordering: Option<Vec<String>>,
@@ -468,17 +429,17 @@ pub struct GeometryFaceRange {
 impl GeometryFaceRange {
     pub fn new(component: Option<i32>) -> Self {
         if let Some(component) = component {
-            return Self {
+            Self {
                 dtype: "Uint32".to_string(),
-                component: component,
+                component,
                 binding: "per-feature".to_string(),
-            };
+            }
         } else {
-            return Self {
+            Self {
                 dtype: "Uint32".to_string(),
                 component: -1,
                 binding: "per-feature".to_string(),
-            };
+            }
         }
     }
 }
@@ -634,9 +595,6 @@ pub struct MaterialTexture {
     pub texture_set_definition_id: i32,
     #[serde(default = "default_texture_value")]
     pub factor: f32,
-    #[serde(default)]
-    #[deprecated]
-    pub tex_coord: i32,
 }
 
 impl Default for MaterialTexture {
@@ -644,45 +602,24 @@ impl Default for MaterialTexture {
         Self {
             texture_set_definition_id: -1,
             factor: default_texture_value(),
-            tex_coord: 0,
         }
     }
 }
 
-fn default_nodes_per_page() -> i32 {
-    64
-}
-
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NodePageDefinition {
-    #[serde(default = "default_nodes_per_page")]
-    pub nodes_per_page: i32,
+    #[serde(default)]
+    pub nodes_per_page: u32,
     pub lod_selection_metric_type: String,
     #[serde(default)]
     pub root_index: usize, // default is 0
 }
 
-impl Default for NodePageDefinition {
-    fn default() -> Self {
-        Self {
-            nodes_per_page: default_nodes_per_page(),
-            lod_selection_metric_type: String::new(),
-            root_index: 0,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ServiceUpdateTimeStamp {
-    pub last_update: i64, // Unix epoch from 1 January 1970 in milliseconds
-}
-
-impl Default for ServiceUpdateTimeStamp {
-    fn default() -> Self {
-        Self { last_update: -1 }
-    }
+    pub last_update: u64, // Unix epoch from 1 January 1970 in milliseconds
 }
 
 fn default_root_node_path() -> String {
@@ -707,32 +644,11 @@ pub struct Store {
     #[serde(default)]
     pub normal_reference_frame: String,
     pub default_geometry_schema: Option<DefaultGeometrySchema>,
-    #[deprecated(note = "Deprecated in 1.7")]
-    pub nid_encoding: Option<String>,
-    #[deprecated(note = "Deprecated in 1.7")]
-    pub feature_encoding: Option<String>,
-    #[deprecated(note = "Deprecated in 1.7")]
-    pub geometry_encoding: Option<String>,
-    #[deprecated(note = "Deprecated in 1.7")]
-    pub attribute_encoding: Option<String>,
-    #[deprecated(note = "Deprecated in 1.7")]
-    pub texture_encoding: Option<Vec<String>>,
-    #[deprecated(note = "Deprecated in 1.7")]
-    pub lod_type: Option<String>,
-    #[deprecated(note = "Deprecated in 1.7")]
-    pub lod_model: Option<String>,
-    #[deprecated(note = "Deprecated in 1.7")]
-    pub indexing_scheme: Option<String>,
-    #[deprecated(note = "Deprecated in 1.7")]
-    pub default_texture_definition: Option<Vec<Texture>>,
-    #[deprecated(note = "Deprecated in 1.7")]
-    pub default_material_definition: Option<MaterialDefinition>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MaterialDefinition {
-    #[deprecated(note = "MaterialDefinition was deprecated in 1.7")]
     pub identifier: MaterialDefinitionInfo,
 }
 
@@ -837,6 +753,13 @@ impl TextureSetDefinition {
             _ => Err("Invalid number of texture formats"),
         }
     }
+
+    pub fn file_names(&self) -> Vec<String> {
+        self.formats
+            .iter()
+            .map(|format| format.file_name())
+            .collect()
+    }
 }
 
 #[derive(Default, Debug, Clone, Deserialize)]
@@ -845,13 +768,19 @@ pub struct TextureSetDefinitionFormat {
     pub format: String,
 }
 
+impl TextureSetDefinitionFormat {
+    pub fn file_name(&self) -> String {
+        format!("{}.{}", self.name, self.format)
+    }
+}
+
 #[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NodePage {
     pub nodes: Vec<Node>,
 }
 
-impl io::SLPKReader for NodePage {}
+impl io::ZipFileReader for NodePage {}
 
 fn default_children() -> Vec<usize> {
     vec![]
@@ -864,37 +793,31 @@ pub struct Node {
     pub obb: OBB,
     #[serde(default = "default_children")]
     pub children: Vec<usize>,
-    pub parent_index: Option<usize>,
+    #[serde(rename = "parentIndex")]
+    pub parent: Option<usize>,
     pub lod_threshold: Option<f32>,
     pub mesh: Option<Mesh>,
+    #[serde(skip)]
+    geometry: Vec<u8>,
+    #[serde(skip)]
+    texture: Vec<u8>,
 }
 
 impl Node {
     pub fn is_root(&self) -> bool {
-        self.parent_index.is_none()
+        self.parent.is_none()
     }
 
     pub fn is_leaf(&self) -> bool {
-        self.children.len() == 0
+        self.children.is_empty()
     }
 
-    pub fn parent<'a>(&self, nodes: &'a Vec<Node>) -> Option<&'a Node> {
-        match self.parent_index {
-            Some(parent_index) => Some(&nodes[parent_index]),
-            None => None,
+    pub fn geometry(&self) -> &Vec<u8> {
+        if self.geometry.is_empty() && !self.is_root() {
+            todo!()
+        } else {
+            &self.geometry
         }
-    }
-
-    pub fn children<'a>(&self, nodes: &'a Vec<Node>) -> Vec<&'a Node> {
-        let mut children = vec![];
-        for child_index in &self.children {
-            children.push(&nodes[*child_index]);
-        }
-        children
-    }
-
-    pub fn geometry(&self) {
-        unimplemented!()
     }
 
     pub fn texture(&self) {
@@ -920,56 +843,147 @@ pub struct Mesh {
     pub attribute: MeshAttribute,
 }
 
+impl Mesh {
+    pub fn material_resource_path(
+        &self,
+        material_definitions: &[MaterialDefinitions],
+        texture_set_definitions: &[TextureSetDefinition],
+        compressed: bool,
+        with_ext: bool,
+    ) -> Option<String> {
+        self.material.resource_path(
+            material_definitions,
+            texture_set_definitions,
+            compressed,
+            with_ext,
+        )
+    }
+    pub fn geometry_resource_path(&self, compressed: bool, local: bool) -> Option<String> {
+        self.geometry.resource_path(compressed, local)
+    }
+    pub fn attribute_resource_path(&self) -> Option<String> {
+        self.attribute.resource_path()
+    }
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MeshMaterial {
-    definition: usize,
-    resource: usize,
-    texel_count_hint: i32,
+    pub definition: isize,
+    pub resource: isize,
+    pub texel_count_hint: i32,
+}
+
+impl MeshMaterial {
+    pub fn resource_path(
+        &self,
+        material_definitions: &[MaterialDefinitions],
+        texture_set_definitions: &[TextureSetDefinition],
+        compressed: bool,
+        with_ext: bool,
+    ) -> Option<String> {
+        if self.resource == -1 {
+            return None;
+        }
+        let textures_path = format!("nodes/{}/textures", self.resource);
+
+        let mat_def = &material_definitions[self.definition as usize];
+        let base_color_tex = mat_def.pbr_metallic_roughness.base_color_texture.as_ref();
+
+        if let Some(base_color_tex) = base_color_tex {
+            let tex_def_id = base_color_tex.texture_set_definition_id as usize;
+            let tex_set_def = texture_set_definitions.get(tex_def_id).unwrap();
+            tex_set_def
+                .formats
+                .get(if compressed { 1 } else { 0 })
+                .map(|format| {
+                    if with_ext {
+                        format!("{}/{}", textures_path, format.file_name())
+                    } else {
+                        format!("{}/{}", textures_path, format.name)
+                    }
+                })
+        } else {
+            None
+        }
+    }
 }
 
 impl Default for MeshMaterial {
     fn default() -> Self {
         Self {
-            definition: 0,
-            resource: 0,
+            definition: -1,
+            resource: -1,
             texel_count_hint: -1,
         }
     }
 }
 
-#[derive(Default, Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MeshGeometry {
-    definition: usize,
-    resource: usize,
-    vertex_count: usize,
-    feature_count: usize,
+    pub definition: isize,
+    pub resource: isize,
+    pub vertex_count: usize,
+    pub feature_count: usize,
 }
 
-#[derive(Default, Debug, Clone, Deserialize)]
+impl Default for MeshGeometry {
+    fn default() -> Self {
+        Self {
+            definition: -1,
+            resource: -1,
+            vertex_count: 0,
+            feature_count: 0,
+        }
+    }
+}
+
+impl MeshGeometry {
+    pub fn resource_path(&self, compressed: bool, local: bool) -> Option<String> {
+        if self.resource == -1 {
+            return None;
+        }
+        let mut index: u32 = 0;
+        if compressed {
+            index = 1;
+        }
+        let mut geometries_path = format!("nodes/{}/geometries/{}", self.resource, index);
+        // if local add .bin.gz extension
+        if local {
+            geometries_path.push_str(".bin.gz");
+        }
+        Some(geometries_path)
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct MeshAttribute {
-    resource: usize,
+    pub resource: isize,
+}
+
+impl Default for MeshAttribute {
+    fn default() -> Self {
+        Self { resource: -1 }
+    }
+}
+
+impl MeshAttribute {
+    pub fn resource_path(&self) -> Option<String> {
+        if self.resource == -1 {
+            return None;
+        }
+        Some(format!("nodes/{}/attributes", self.resource))
+    }
 }
 
 #[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Metadata {
     #[serde(rename = "I3SVersion")]
-    pub i3s_version: String,
-    pub node_count: usize,
-}
-
-impl Metadata {
-    fn rest_path() -> String {
-        "metadata.json".to_string()
-    }
-
-    pub async fn from_rest(stream: &Rest) -> Result<Self, Box<dyn Error>> {
-        let resp = stream.get(Self::rest_path().as_str()).await?;
-        let result = resp.json::<Self>().await?;
-        Ok(result)
-    }
+    pub i3s_version: Option<String>,
+    pub node_count: Option<usize>,
+    pub folder_pattern: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -1090,29 +1104,19 @@ pub struct AttributeStatistics {
     pub most_frequent_values: Option<Vec<ValueCount>>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Histogram {
-    minimum: f64,
-    maximum: f64,
-    counts: Vec<u16>, // will never be more than 256
-}
-
-impl Default for Histogram {
-    fn default() -> Self {
-        Self {
-            minimum: -1.0,
-            maximum: -1.0,
-            counts: vec![],
-        }
-    }
+    pub minimum: f64,
+    pub maximum: f64,
+    pub counts: Vec<u16>, // will never be more than 256
 }
 
 #[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ValueCount {
-    value: String,
-    count: usize,
+    pub value: String,
+    pub count: usize,
 }
 
 #[derive(Default, Debug, Clone, Deserialize)]
