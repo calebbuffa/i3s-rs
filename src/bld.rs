@@ -41,19 +41,25 @@ pub struct AttributeStats {
     pub most_frequent_values: Option<Vec<MostFrequentValueTypeOptions>>,
 }
 
-fn default_layer_type() -> String {
-    "Building".to_string()
+#[derive(Debug, Deserialize)]
+pub struct LayerType(String);
+
+impl Default for LayerType {
+    fn default() -> Self {
+        Self("Building".to_string())
+    }
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[derive(Default)]
 pub struct SceneLayerInformation {
     pub id: usize,
     pub name: String,
     pub version: String,
     pub alias: Option<String>,
-    #[serde(default = "default_layer_type")]
-    pub layer_type: String,
+    #[serde(default)]
+    pub layer_type: LayerType,
     pub filters: Option<Vec<Filter>>,
     #[serde(rename = "sublayers")]
     pub sub_layers: Vec<SubLayer>,
@@ -70,26 +76,6 @@ pub struct SceneLayerInformation {
     pub statistics_href: String,
 }
 
-impl Default for SceneLayerInformation {
-    fn default() -> Self {
-        Self {
-            id: 0,
-            name: String::new(),
-            version: String::new(),
-            alias: None,
-            layer_type: default_layer_type(),
-            filters: None,
-            sub_layers: vec![],
-            full_extent: cmn::FullExtent::default(),
-            spatial_reference: cmn::SpatialReference::default(),
-            description: String::new(),
-            copyright_text: String::new(),
-            height_model_info: None,
-            active_filter_id: String::new(),
-            statistics_href: String::new(),
-        }
-    }
-}
 
 #[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]

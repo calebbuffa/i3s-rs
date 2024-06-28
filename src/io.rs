@@ -1,4 +1,3 @@
-use bytes::Bytes;
 use core::fmt;
 use serde_json::Value;
 use std::error;
@@ -45,12 +44,6 @@ impl From<serde_json::Error> for ZipFileReadError {
     }
 }
 
-// impl From<dyn std::error::Error> for ZipFileReadError {
-//     fn from(err: std::error::Error) -> Self {
-//         ZipFileReadError::IO(err)
-//     }
-// }
-
 impl fmt::Display for ZipFileReadError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "ZipFileReadError: ")
@@ -75,11 +68,11 @@ pub fn decode_json_gz<R: Read>(json_gz: R) -> Result<String, io::Error> {
     Ok(json_content)
 }
 
-pub fn decode_gzip_buffer(buffer: &[u8]) -> Result<Bytes, io::Error> {
+pub fn decode_gzip_buffer(buffer: &[u8]) -> Result<Vec<u8>, io::Error> {
     let mut decoder = flate2::read::GzDecoder::new(buffer);
     let mut decompressed = Vec::new();
     decoder.read_to_end(&mut decompressed)?;
-    Ok(Bytes::from(decompressed))
+    Ok(decompressed)
 }
 
 pub fn unzip_scene_layer_info(

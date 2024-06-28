@@ -109,26 +109,46 @@ pub struct Store {
     pub attribute_encoding: Option<String>,
 }
 
-fn default_geometry_type() -> String {
-    "points".to_string()
-}
-
-fn default_topology() -> String {
-    "PerAttributeArray".to_string()
-}
-
 fn default_encoding() -> String {
     "lepcc-xyz".to_string()
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GeometryType(String);
+
+impl From<GeometryType> for String {
+    fn from(geometry_type: GeometryType) -> Self {
+        geometry_type.0
+    }
+}
+
+impl Default for GeometryType {
+    fn default() -> Self {
+        GeometryType(String::from("Points"))
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Topology(String);
+
+impl From<Topology> for String {
+    fn from(topology: Topology) -> Self {
+        topology.0
+    }
+}
+
+impl Default for Topology {
+    fn default() -> Self {
+        Topology(String::from("PerAttributeArray"))
+    }
 }
 
 #[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DefaultGeometrySchema {
     pub vertex_attributes: VertexAttributes,
-    #[serde(default = "default_geometry_type")]
-    pub geometry_type: String,
-    #[serde(default = "default_topology")]
-    pub topology: String,
+    pub geometry_type: GeometryType,
+    pub topology: Topology,
     #[serde(default = "default_encoding")]
     pub encoding: String,
     pub ordering: Option<Vec<String>>,
@@ -238,8 +258,7 @@ pub struct ValueCount {
 #[serde(rename_all = "camelCase")]
 pub struct Labels {
     pub labels: Option<Vec<Label>>,
-    #[serde(rename = "bitfieldLabels")]
-    pub bit_field_labels: Option<Vec<BitFieldLabel>>,
+    pub bitfield_labels: Option<Vec<BitfieldLabel>>,
 }
 
 #[derive(Default, Debug, Deserialize)]
@@ -251,7 +270,7 @@ pub struct Label {
 
 #[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct BitFieldLabel {
+pub struct BitfieldLabel {
     pub bit_number: i32,
     pub label: String,
 }

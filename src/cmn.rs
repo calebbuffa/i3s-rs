@@ -42,16 +42,6 @@ pub struct SceneLayerInformation {
     pub elevation_info: Option<ElevationInfo>,
 }
 
-// impl TryFrom<R: Read> for SceneLayerInformation {
-//     type Error = io::ZipFileReadError;
-
-//     fn try_from(zip_file: ZipFile<'_>) -> Result<Self, Self::Error> {
-//         let content = io::decode_json_gz(zip_file)?;
-//         let result = serde_json::from_str(content.as_str())?;
-//         Ok(result)
-//     }
-// }
-
 impl SceneLayerInformation {
     fn rest_path() -> String {
         format!("layers/{}", 0)
@@ -782,16 +772,12 @@ pub struct NodePage {
 
 impl io::ZipFileReader for NodePage {}
 
-fn default_children() -> Vec<usize> {
-    vec![]
-}
-
 #[derive(Default, Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Node {
     pub index: usize,
     pub obb: OBB,
-    #[serde(default = "default_children")]
+    #[serde(default)]
     pub children: Vec<usize>,
     #[serde(rename = "parentIndex")]
     pub parent: Option<usize>,
@@ -820,8 +806,12 @@ impl Node {
         }
     }
 
-    pub fn texture(&self) {
-        unimplemented!()
+    pub fn texture(&self) -> &Vec<u8> {
+        if self.texture.is_empty() && !self.is_root() {
+            todo!()
+        } else {
+            &self.texture
+        }
     }
 }
 
@@ -835,12 +825,9 @@ pub struct OBB {
 
 #[derive(Default, Debug, Clone, Deserialize)]
 pub struct Mesh {
-    #[serde(default)]
-    pub material: MeshMaterial,
-    #[serde(default)]
-    pub geometry: MeshGeometry,
-    #[serde(default)]
-    pub attribute: MeshAttribute,
+    pub geometry: Option<MeshGeometry>,
+    pub material: Option<MeshMaterial>,
+    pub attribute: Option<MeshAttribute>,
 }
 
 impl Mesh {
@@ -851,18 +838,30 @@ impl Mesh {
         compressed: bool,
         with_ext: bool,
     ) -> Option<String> {
-        self.material.resource_path(
-            material_definitions,
-            texture_set_definitions,
-            compressed,
-            with_ext,
-        )
+        if let Some(material) = &self.material {
+            material.resource_path(
+                material_definitions,
+                texture_set_definitions,
+                compressed,
+                with_ext,
+            )
+        } else {
+            None
+        }
     }
     pub fn geometry_resource_path(&self, compressed: bool, local: bool) -> Option<String> {
-        self.geometry.resource_path(compressed, local)
+        if let Some(geometry) = &self.geometry {
+            geometry.resource_path(compressed, local)
+        } else {
+            None
+        }
     }
     pub fn attribute_resource_path(&self) -> Option<String> {
-        self.attribute.resource_path()
+        if let Some(attribute) = &self.attribute {
+            attribute.resource_path()
+        } else {
+            None
+        }
     }
 }
 

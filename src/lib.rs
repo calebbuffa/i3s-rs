@@ -7,6 +7,6 @@ pub mod psl;
 pub mod stream;
 
 pub use i3s::{
-    Building, DDDObject, Format, IntegratedMesh, Point, PointCloud, Profile, SceneLayer,
-    SceneLayerPackage, Service,
+    get_layer_type, Building, DDDObject, I3SFormat, I3SInfo, I3SProfile, IntegratedMesh, Point,
+    PointCloud, SceneLayer, SceneLayerPackage, Service,
 };
